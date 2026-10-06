@@ -504,9 +504,18 @@ private:
 };
 }
 void ToggleHud() {
+    // Off, the performance overlay, then the motion one. What is saved is whether an overlay
+    // shows; it comes back as the performance one.
     const int mode = (hud_mode.load(std::memory_order_relaxed) + 1) % 3;
     hud_mode.store(mode, std::memory_order_relaxed);
-    // The saved preference is whether the overlay shows; it comes back as the performance one.
+    // A game with its own FPS overlay setting keeps the change for itself.
+    const uint64_t title = session_title.load();
+    if (auto game = LoadGameSettings(title); title && game.hud >= 0) {
+        if (game.hud == int(mode != kHudOff)) return;
+        game.hud = mode != kHudOff ? 1 : 0;
+        if (!SaveGameSettings(title, game)) Report("settings", "Could not save the game's HUD setting");
+        return;
+    }
     auto preferences = LoadPreferences();
     if (preferences.hud == (mode != kHudOff)) return;
     preferences.hud = mode != kHudOff;
@@ -539,7 +548,7 @@ GraphicsWindow::GraphicsWindow(bool use_vulkan) : vulkan(use_vulkan) {
     vulkan_loading_start = -1;
     vulkan_loading_frames = 0;
     vulkan_loading_pace = {};
-    hud_mode.store(LoadPreferences().hud ? kHudPerformance : kHudOff, std::memory_order_relaxed);
+    hud_mode.store(PreferencesFor(session_title.load()).hud ? kHudPerformance : kHudOff, std::memory_order_relaxed);
 #ifdef EDEN_PS5_VULKAN
     if (vulkan) {
         vulkan_hud_clock = {};

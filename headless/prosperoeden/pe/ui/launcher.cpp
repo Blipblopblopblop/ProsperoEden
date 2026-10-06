@@ -13,6 +13,14 @@ using audio::Cue;
 
 namespace
 {
+// How long the notification of a newer release stays.
+constexpr float kUpdateNoticeSeconds = 10.0f;
+// The update dialog's full height (update.cpp).
+constexpr float kUpdatePanelHeight = 688.0f;
+} // namespace
+
+namespace
+{
 
 constexpr Rect kScreen{0.0f, 0.0f, 1920.0f, 1080.0f};
 
@@ -25,13 +33,14 @@ Launcher::Launcher(Services &services, Textures &textures, const Fonts &fonts, b
     clock_ = services_.clock();
     prefs_ = services_.preferences();
     apply_look();
+    read_profiles();
     read_home();
     const bool continue_ready = home_.setup_ready && home_.last_exists;
     home_focus_ = continue_ready ? 0 : home_.setup_ready ? 1 : 2;
     home_springs_[static_cast<std::size_t>(home_focus_)].snap(1.0f);
-    settings_.visible = 8;
-    settings_.pitch = 79.0f;
-    settings_.reset(8, 0);
+    settings_.visible = 9;
+    settings_.pitch = 70.0f;
+    settings_.reset(9, 0);
     section_.snap(1.0f);
     detail_.snap(1.0f);
     cue(home_.launch_failed ? Cue::notify : first_start ? Cue::welcome : Cue::resume);
@@ -128,6 +137,16 @@ bool Launcher::save_preferences(bool quiet)
 
 void Launcher::launch(const std::string &file, const std::string &title, const std::string &cover)
 {
+    // A game whose file was taken away since the menu showed it is not started: it leaves the
+    // menu instead.
+    if (!services_.game_exists(file))
+    {
+        read_home();
+        drop_missing_games();
+        say(tr("ROM missing from the game files folder"), true);
+        cue(Cue::error);
+        return;
+    }
     selected_game_ = services_.game_path(file);
     launch_title_ = title;
     launch_cover_ = cover;
@@ -144,6 +163,14 @@ void Launcher::press(Key key)
         return press_game(key);
     if (modal_ == Modal::mods)
         return press_mods(key);
+    if (modal_ == Modal::game_options)
+        return press_game_options(key);
+    if (modal_ == Modal::mapping)
+        return press_mapping(key);
+    if (modal_ == Modal::profiles)
+        return press_profiles(key);
+    if (modal_ == Modal::update)
+        return press_update(key);
     if (modal_ != Modal::none)
         return press_dialog(key);
     switch (screen_)
@@ -197,6 +224,9 @@ void Launcher::update(float dt)
     performance_rows_.update(dt);
     game_rows_.update(dt);
     mod_rows_.update(dt);
+    option_rows_.update(dt);
+    mapping_rows_.update(dt);
+    profile_rows_.update(dt);
     mode_.target = selected_docked_ ? 0.0f : 1.0f;
     mode_.update(dt, 22.0f);
     const bool mods_on = library_.selected >= 0 && library_.selected < static_cast<int>(games_.size()) &&
@@ -217,6 +247,23 @@ void Launcher::update(float dt)
         switches_[i].update(dt, 22.0f);
     }
 
+    // Games removed from the game files folder while the menu is open leave it within a moment.
+    presence_wait_ += dt;
+    if (presence_wait_ >= 2.0f && selected_game_.empty())
+    {
+        presence_wait_ = 0.0f;
+        check_games_present();
+    }
+
+    // A newer release: the update dialog, or a notification when the app cannot install it.
+    update_offer(dt);
+    update_install(dt);
+    if (update_notice_left_ > 0.0f)
+        update_notice_left_ = std::max(0.0f, update_notice_left_ - dt);
+    // It slides away over its last moments.
+    update_notice_in_.target = update_notice_left_ > 0.4f ? 1.0f : 0.0f;
+    update_notice_in_.update(dt, 14.0f);
+
     clock_wait_ += dt;
     if (clock_wait_ >= 1.0f)
     {
@@ -229,6 +276,47 @@ void Launcher::update(float dt)
         launch_.update(dt);
         if (!launch_.running)
             done_ = true;
+    }
+}
+
+void Launcher::update_offer(float dt)
+{
+    (void)dt;
+    if (!update_waiting_ && update_notice_left_ <= 0.0f && selected_game_.empty() && update_.version.empty())
+    {
+        UpdateOffer offer;
+        if (services_.take_update(&offer) && !offer.version.empty())
+        {
+            // "v1.000.050" and "1.000.050" both read as the number.
+            const std::string &newer = offer.version;
+            update_version_ = newer.size() > 1 && (newer[0] == 'v' || newer[0] == 'V') ? newer.substr(1) : newer;
+            if (offer.installable && first_start_)
+            {
+                // Asked each time the app opens (not on returning from a game).
+                update_ = offer;
+                notes_laid_out_ = false;
+                update_waiting_ = true;
+            }
+            else
+            {
+                update_notice_left_ = kUpdateNoticeSeconds;
+                cue(Cue::notify);
+            }
+        }
+    }
+    // The dialog waits for the welcome and for whatever dialog is open to close.
+    if (update_waiting_ && modal_ == Modal::none && modal_shown_ == Modal::none && !transition_.running &&
+        selected_game_.empty() && intro_ > 1.2f)
+    {
+        update_waiting_ = false;
+        update_stage_ = UpdateStage::offer;
+        update_stage_time_ = 0.0f;
+        update_choice_ = 0;
+        update_choice_x_.snap(0.0f);
+        update_height_.snap(kUpdatePanelHeight);
+        modal_ = modal_shown_ = Modal::update;
+        message_.clear();
+        cue(Cue::notify);
     }
 }
 
@@ -263,6 +351,37 @@ void Launcher::draw_footer(Canvas &c, const Hint *hints, int count)
 {
     c.list.rounded_rect({108.0f, 955.0f, 1704.0f, 1.0f}, 0.0f, Color::rgb(0x586d5a, 0.9f));
     draw_hints(c, hints, count, 108.0f, 987.0f, theme::kCopy, 1704.0f);
+}
+
+void Launcher::draw_update_notice(Canvas &c)
+{
+    const float shown = tween::clamp01(update_notice_in_.value);
+    if (shown <= 0.01f || update_version_.empty())
+        return;
+    gfx::DrawList &list = c.list;
+    // Top right, over whatever the menu shows; it comes in from the right edge.
+    const Rect panel{1352.0f, 44.0f, 520.0f, 108.0f};
+    list.push_opacity(shown);
+    list.push_transform(1.0f, 0.0f, 0.0f, (1.0f - shown) * 72.0f * motion(), 0.0f);
+    glass(c, panel, 20.0f, theme::kPanel.with_alpha(0.97f), theme::kLime.with_alpha(0.55f), 1.4f);
+    // A mark at the left: a lime disc with an arrow up.
+    const float cx = panel.x + 48.0f;
+    const float cy = panel.y + 50.0f;
+    list.circle(cx, cy, 20.0f, theme::kLime.with_alpha(0.22f));
+    list.line(cx, cy + 9.0f, cx, cy - 9.0f, 2.6f, theme::kLime);
+    list.line(cx - 8.0f, cy - 2.0f, cx, cy - 10.0f, 2.6f, theme::kLime);
+    list.line(cx + 8.0f, cy - 2.0f, cx, cy - 10.0f, 2.6f, theme::kLime);
+    text_shrink(c, tr("Update available"), panel.x + 88.0f, baseline(panel.y + 18.0f, 34.0f, theme::kText24),
+                theme::kText24, theme::kTitle, panel.w - 112.0f);
+    text_shrink(c, fill(tr("Version {0} is on homebrew.page"), {update_version_}), panel.x + 88.0f,
+                baseline(panel.y + 54.0f, 30.0f, theme::kSmall), theme::kSmall, theme::kCopy,
+                panel.w - 112.0f);
+    // The time it has left.
+    const float left = tween::clamp01(update_notice_left_ / kUpdateNoticeSeconds);
+    list.rounded_rect({panel.x + 20.0f, panel.y + panel.h - 12.0f, (panel.w - 40.0f) * left, 3.0f}, 1.5f,
+                      theme::kLime.with_alpha(0.8f));
+    list.pop_transform();
+    list.pop_opacity();
 }
 
 void Launcher::draw_launch(Canvas &c)
@@ -326,12 +445,28 @@ void Launcher::draw(gfx::DrawList &list)
             draw_game(c, opened);
         else if (modal_shown_ == Modal::mods)
             draw_mods(c, opened);
+        else if (modal_shown_ == Modal::game_options)
+            draw_game_options(c, opened);
+        else if (modal_shown_ == Modal::mapping)
+            draw_mapping(c, opened);
+        else if (modal_shown_ == Modal::profiles)
+            draw_profiles(c, opened);
+        else if (modal_shown_ == Modal::update)
+            draw_update(c, opened);
         else
             draw_dialog(c, modal_shown_, opened);
     }
     list.pop_transform();
+    draw_update_notice(c);
     if (launching)
         draw_launch(c);
+    // Closing for the update: the screen goes dark over the last moments.
+    if (modal_shown_ == Modal::update && update_stage_ == UpdateStage::closing)
+    {
+        const float dark = tween::cubic_in_out((update_stage_time_ - 2.2f) / 0.8f);
+        if (dark > 0.0f)
+            list.rounded_rect(kScreen, 0.0f, Color{0.0f, 0.0f, 0.0f, dark});
+    }
 
     // The launcher arrives out of the dark.
     const float arrival = 1.0f - tween::cubic_out(intro_ / (first_start_ ? 0.7f : 0.45f));

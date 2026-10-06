@@ -14,6 +14,21 @@ Eden for the PS5, and writes the release files to `dist/`:
   ShadowMountPlus installs like a package;
 - `SHA256SUMS` and `release-notes.md`.
 
+The app package includes an exact-title one-shot helper built from the pinned upstream
+[PS5-Lapy-JB-Daemon](https://github.com/blackbearreloaded/PS5-Lapy-JB-Daemon) source. Its generated
+manifest, ELF hash, protocol hash, title and required retry feature are checked before packaging.
+At runtime a resident Lapy service gets the first bounded opportunity; otherwise ProsperoEden
+sends the packaged helper to the local ELF loader on TCP port 9021. Without that loader or a
+resident service, ProsperoEden falls back to its sandbox paths.
+
+The pinned commit includes the donor-release and firmware 13.60 corrections merged in
+[PS5-Lapy-JB-Daemon PR #48](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon/pull/48) and
+[PR #49](https://github.com/mpereiraesaa/PS5-Lapy-JB-Daemon/pull/49).
+The previous `54a095c` pin passed five automated launch/elevate/close cycles on both firmware 6.02
+and 12.70. Each run proved root `/data` access, reaped and balanced donors, a clean helper exit, and
+no fatal signal, app crash, coredump, nonsleeping-lock warning, or kernel panic in its captured
+kernel-log window. The new `c3bdfe3` helper still requires attended qualification runs.
+
 The first build takes a while (RADV and Eden are large). Later builds reuse everything that
 already exists: the dependencies, this checkout's build cache in
 `~/.cache/ps5-eden-headless.<hash>`, and ccache.
@@ -53,8 +68,11 @@ Inside this repository, in `.deps/`:
   configure time (`headless/inject.cmake`).
 - **FFmpeg** at the commit Eden pins, built with only the decoders games use.
 - **PS5 OpenGL 4.6 SDK 1.0.0** (release archive), for the launcher and the OpenGL renderer.
-- **OpenSSL and zlib** from pacbrew v0.40.2.
+- **OpenSSL, zlib, libcurl and libpsl** from pacbrew v0.40.2.
 - **LLVM 18.1.8 compiler-rt** emulated-TLS sources and **fmt 12.1.0** headers.
+- **PS5-Lapy-JB-Daemon** at its pinned compatibility-fork commit, its pinned **ps5log** build input,
+  and the official **PS5 Payload SDK v0.42** used only to build the exact-title one-shot helper.
+  Eden itself continues to use the boilerplate's Payload SDK v0.42.
 
 Next to this repository (`../`), as git checkouts:
 

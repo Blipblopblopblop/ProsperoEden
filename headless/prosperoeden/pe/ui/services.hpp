@@ -6,6 +6,7 @@
 
 #include "pe/gfx/image.hpp"
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -27,6 +28,35 @@ enum class Key : std::uint8_t
     down,
     left,
     right,
+};
+
+// A newer release of the app, listed on homebrew.page.
+struct UpdateOffer
+{
+    std::string version;      // its name: "v1.000.060"
+    std::uint64_t size = 0;   // its download in bytes; 0 when not known
+    bool installable = false; // the app can install it itself (otherwise it is only announced)
+    std::string notes;        // what the developer wrote on the release (plain text); may be empty
+    bool notes_truncated = false; // the catalog cut the notes; the rest is on the app's page
+};
+// Where installing it is.
+enum class UpdatePhase : std::uint8_t
+{
+    idle,
+    starting,
+    downloading,
+    unpacking,
+    ready,
+    applying,
+    cancelled,
+    failed,
+};
+struct UpdateStatus
+{
+    UpdatePhase phase = UpdatePhase::idle;
+    std::uint64_t done = 0;
+    std::uint64_t total = 0; // 0 while not known
+    std::string error;       // why it failed (English, technical)
 };
 
 // A game file in the games folder.
@@ -80,6 +110,31 @@ struct Home
     std::string system_status;
 };
 
+// Button mapping: which DualSense button presses each of the game's buttons, on every controller.
+// The game's buttons: A B X Y L R ZL ZR + - and the two stick presses; the DualSense buttons:
+// Cross Circle Square Triangle L1 R1 L2 R2 L3 R3 Options Create Touchpad. A mapping never names
+// a DualSense button twice (headless/button_mapping.h).
+constexpr int kGameButtons = 12;
+constexpr int kPadButtons = 13;
+using ButtonMapping = std::array<int, kGameButtons>;
+constexpr ButtonMapping kDefaultMapping = {1, 0, 3, 2, 4, 5, 6, 7, 10, 12, 8, 9};
+// The game button takes the DualSense button; the one that had it gets this one's old one.
+inline ButtonMapping assign_button(ButtonMapping mapping, int game, int pad)
+{
+    for (int other = 0; other < kGameButtons; ++other)
+        if (other != game && mapping[static_cast<std::size_t>(other)] == pad)
+            mapping[static_cast<std::size_t>(other)] = mapping[static_cast<std::size_t>(game)];
+    mapping[static_cast<std::size_t>(game)] = pad;
+    return mapping;
+}
+
+// One of the people who play on this console.
+struct Profile
+{
+    std::string name;
+    bool playing = false; // games start as this one
+};
+
 struct Preferences
 {
     bool hud = true;
@@ -106,16 +161,28 @@ struct Preferences
     bool unsafe_dma = false;    // unsafe DMA accuracy
     bool reactive_flushing = true;  // off is faster; some effects break
     bool skip_invalidation = false; // fewer invalidations of what the GPU caches hold
+    ButtonMapping mapping = kDefaultMapping; // Settings > Controls > Button mapping
 };
 
-// One game's overrides; -1 uses Settings > Video.
+// What one game does differently from Settings (Library > Game settings). Each value is -1 while
+// the game follows Settings; switches are 0 off, 1 on.
 struct GameSettings
 {
-    int renderer = -1;
-    int resolution = -1;
-    int filter = -1;
-    int refresh = -1;
-    int joycon = -1; // single Joy-Con side: -1 right, 1 left
+    int renderer = -1;   // 0 OpenGL, 1 Vulkan
+    int resolution = -1; // index into Services::resolution_labels
+    int filter = -1;     // index into Services::filter_labels
+    int refresh = -1;    // 0 60 Hz, 1 120 Hz
+    int hud = -1;        // FPS overlay
+    int volume = -1;     // game volume, 0-100
+    int mute = -1;
+    int vibration = -1;
+    int language = -1;   // index into Services::language_labels
+    bool own_mapping = false; // the game has a button mapping of its own
+    ButtonMapping mapping = kDefaultMapping;
+    // The Performance switches, in the order of Preferences: block list, async shaders, fast GPU,
+    // unsafe CPU, unsafe DMA, reactive flushing, skip invalidation.
+    std::array<int, 7> performance{-1, -1, -1, -1, -1, -1, -1};
+    int joycon = -1;     // single Joy-Con side: -1 follows (right), 0 right, 1 left (kJoyconKeys)
 };
 
 // One cheat of a mod that lists several: each is chosen on its own.
@@ -164,11 +231,44 @@ class Services
         return 1u;
     }
     virtual std::string version() = 0; // "v1.000.040"
+    // A newer release than this one is listed (asked once per launch): handed over once, when the
+    // answer has come.
+    virtual bool take_update(UpdateOffer *)
+    {
+        return false;
+    }
+    // Installing it (the offer must be installable): begin downloading and unpacking it beside the
+    // app (false: it could not begin), where that is, stop it (nothing is changed before
+    // apply_update), and once it is ready the go-ahead (true: the app must close now; its files
+    // are replaced once it has). finish_update after a cancel or a failure.
+    virtual bool start_update()
+    {
+        return false;
+    }
+    virtual UpdateStatus update_status()
+    {
+        return {};
+    }
+    virtual void cancel_update()
+    {
+    }
+    virtual bool apply_update()
+    {
+        return false;
+    }
+    virtual void finish_update()
+    {
+    }
 
     // ---- library ----
     virtual std::vector<Game> games() = 0; // reads every game file: slow
     // The value the launcher hands back to start a game.
     virtual std::string game_path(const std::string &file) = 0;
+    // Whether a game's file is still in the game files folder (one look at the file, no reading).
+    virtual bool game_exists(const std::string &)
+    {
+        return true;
+    }
     virtual bool docked(std::uint64_t title_id) = 0;
     virtual bool set_docked(std::uint64_t title_id, bool docked) = 0;
     virtual GameSettings game_settings(std::uint64_t title_id) = 0;
@@ -195,6 +295,35 @@ class Services
     virtual int filesystem_access() = 0; // 0: the whole filesystem
 
     // ---- save transfer: a game's save in from, or out to, a folder (not in every build) ----
+    // ---- profiles: who is playing ----
+    // Each profile keeps its own save data and its own recently played games. Empty: this build
+    // has none to choose from.
+    virtual std::vector<Profile> profiles()
+    {
+        return {};
+    }
+    // The profile games start with from now on.
+    virtual bool choose_profile(int)
+    {
+        return false;
+    }
+    // A new profile, named by itself; its place in the list, or -1 (eight is the most).
+    virtual int add_profile()
+    {
+        return -1;
+    }
+    // The next (step 1) or the one before (step -1) of the names a profile can take: the PS5
+    // users signed in, then "Player 1" to "Player 8".
+    virtual bool rename_profile(int, int)
+    {
+        return false;
+    }
+    // Takes a profile off the list; its save data stays on the console. Not the one playing.
+    virtual bool remove_profile(int)
+    {
+        return false;
+    }
+
     virtual bool save_transfer_available()
     {
         return false;

@@ -78,7 +78,22 @@ class Launcher
         accessibility,
         diagnostics,
         game,
-        mods, // a game's mods, opened from its settings
+        mods,         // a game's mods, opened from its settings
+        game_options, // one category of a game's own settings, opened from its settings
+        mapping,      // the button mapping: Settings > Controls', or a game's own
+        profiles,     // who is playing: Settings > Profiles
+        update,       // a newer release of the app: install it or not (update.cpp)
+    };
+    // The update dialog's steps: the offer, installing, stopping it, closing for the helper to
+    // finish, and a failure.
+    enum class UpdateStage : std::uint8_t
+    {
+        offer,
+        notes, // the release notes, opened from the offer
+        working,
+        cancelling,
+        closing,
+        failed,
     };
 
     // ---- shell (launcher.cpp) ----
@@ -95,6 +110,9 @@ class Launcher
     void draw_frame(Canvas &c, const char *title, const char *copy);
     void draw_footer(Canvas &c, const Hint *hints, int count);
     void draw_launch(Canvas &c);
+    // The notification of a newer release the app cannot install itself, at the top right for ten
+    // seconds.
+    void draw_update_notice(Canvas &c);
     // quiet: a change that shows at once needs no "Saved" line.
     bool save_preferences(bool quiet = false);
     // The switches of a dialog as the preferences have them, in the order of its rows.
@@ -119,6 +137,9 @@ class Launcher
     void read_home();
     // A game's mods as its list has them: how many, and how many are switched on.
     void count_mods(Game &game, const std::vector<Mod> &mods);
+    // Games whose file left the game files folder leave the home screen and the Library.
+    void check_games_present();
+    bool drop_missing_games();
     // Reads a game's mods for its dialogs, with the rows of the Mods list.
     void read_mods(Game &game);
     // What a game comes with, on one line: "Update 1.2.0, 2 DLC, 2 mods"; "None" without any.
@@ -136,6 +157,25 @@ class Launcher
     void press_mods(Key key);
     void draw_mods(Canvas &c, float open);
 
+    // ---- a game's own settings by category, and the button mapping (game_options.cpp) ----
+    // Categories, in the order of the game settings' rows: video, performance, audio, controls,
+    // language.
+    static constexpr int kGameOptionCategories = 5;
+    void open_game_options(int category);
+    void press_game_options(Key key);
+    void draw_game_options(Canvas &c, float open);
+    // How many of a category's settings the game has of its own.
+    int game_overrides(int category) const;
+    // ---- profiles (profiles.cpp) ----
+    void read_profiles();
+    int profile_row_count() const;
+    void open_profiles();
+    void press_profiles(Key key);
+    void draw_profiles(Canvas &c, float open);
+    void open_mapping(bool for_game);
+    void press_mapping(Key key);
+    void draw_mapping(Canvas &c, float open);
+
     // ---- settings and its dialogs (settings.cpp) ----
     void press_settings(Key key);
     void draw_settings(Canvas &c);
@@ -143,6 +183,23 @@ class Launcher
     void draw_dialog(Canvas &c, Modal modal, float open);
     int dialog_rows(Modal modal) const;
     float dialog_row_top(Modal modal, int row) const;
+
+    // ---- a newer release of the app (update.cpp) ----
+    // Takes the update check's answer when it comes, and opens the dialog once the menu is free.
+    void update_offer(float dt);
+    // Follows the install: progress, its speed, the ready and failed steps.
+    void update_install(float dt);
+    void begin_update();
+    void press_update(Key key);
+    void draw_update(Canvas &c, float open);
+    // The release notes view: opened from the offer, laid out once per text size, scrolled.
+    void open_notes();
+    void close_notes();
+    void layout_notes(Canvas &c);
+    void scroll_notes(float by);
+    float notes_window() const;
+    float notes_max_scroll() const;
+    void draw_notes(Canvas &c, float height);
 
     // ---- game files, language, about (browse.cpp) ----
     void enter_files();
@@ -161,6 +218,49 @@ class Launcher
     std::vector<audio::Cue> cues_;
     float time_ = 0.0f;
     float clock_wait_ = 0.0f;
+    float presence_wait_ = 0.0f; // time since the shown games' files were last looked at
+    std::string update_version_;       // the newer release being announced
+    float update_notice_left_ = 0.0f;  // seconds its notification still shows
+    tween::Spring update_notice_in_;   // 0 away .. 1 in place
+    // The update dialog.
+    UpdateOffer update_;
+    bool update_waiting_ = false;      // an offer waits for the menu to be free
+    UpdateStage update_stage_ = UpdateStage::offer;
+    float update_stage_time_ = 0.0f;   // seconds in this step
+    int update_choice_ = 0;            // 0: the first button, 1: the second
+    tween::Spring update_choice_x_;    // the highlight between the two buttons
+    tween::Spring update_height_;      // the panel's height: shorter while it works
+    UpdateStatus update_status_;
+    tween::Spring update_fraction_;    // the shown share done, 0..1
+    float update_spin_ = 0.0f;         // the waiting arc's turn
+    float update_rate_ = 0.0f;         // bytes per second, smoothed
+    std::uint64_t update_rate_done_ = 0;
+    float update_rate_wait_ = 0.0f;
+    // The release notes, laid out: one entry per drawn line, and the boxes behind callouts.
+    struct NoteLine
+    {
+        std::string text;
+        float y = 0.0f;      // from the top of the text
+        float height = 0.0f; // the line's pitch
+        float size = 0.0f;
+        Color color{};
+        float indent = 0.0f;
+        bool bullet = false; // the first line of a list item
+    };
+    struct NoteBox
+    {
+        float top = 0.0f;
+        float bottom = 0.0f;
+        bool warning = false;
+    };
+    std::vector<NoteLine> notes_lines_;
+    std::vector<NoteBox> notes_boxes_;
+    float notes_height_ = 0.0f;   // the whole text's height
+    bool notes_laid_out_ = false;
+    bool notes_large_ = false;    // laid out for Larger text
+    float notes_target_ = 0.0f;   // where the scroll is going
+    tween::Spring notes_scroll_;  // where it is
+    tween::Spring notes_bounce_;  // the give at either end
     std::string clock_;
     std::string version_;
 
@@ -230,6 +330,14 @@ class Launcher
     };
     std::vector<ModRow> mod_list_;
     ListView mod_rows_;
+    int game_options_ = 0;          // the category a game's own settings dialog shows
+    ListView option_rows_;          // its rows
+    bool mapping_for_game_ = false; // the mapping dialog edits the game's own mapping
+    ListView mapping_rows_;
+    std::vector<Profile> profiles_; // the people who play on this console
+    std::string playing_;           // the one games start as
+    ListView profile_rows_;
+    int profile_remove_ = -1;       // the row Square was pressed on once (asked twice)
 
     // game files
     std::string browse_dir_;

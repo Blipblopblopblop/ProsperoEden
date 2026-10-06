@@ -8,6 +8,7 @@
 #include "audio_out_init.h"
 #include "diagnostics.h"
 #include "eden_services.h"
+#include "update_notice.h"
 #include "pe/audio/sounds.hpp"
 #include "pe/core/file.hpp"
 #include "pe/core/strings.hpp"
@@ -21,6 +22,8 @@
 #ifdef EDEN_DEV_ROM_ID
 #include "crash_trigger.h"
 #include "development_input.h"
+#include "stop_limit.h"
+#include <cerrno>
 #include <fstream>
 #endif
 
@@ -180,11 +183,15 @@ std::string RunApp(const std::string& launch_error, bool first_start) {
         pe::gfx::GlBatch batch;
         pe::gfx::Font font;
         std::string font_data;
-        const bool ready = batch.init() &&
-            pe::read_file(Eden::AppFile("ui/fonts/montserrat-medium.pefont"), &font_data) &&
-            font.load(font_data);
+        const std::string font_path = Eden::AppFile("ui/fonts/montserrat-medium.pefont");
+        const bool shaders = batch.init();
+        const bool font_read = shaders && pe::read_file(font_path, &font_data);
+        const bool ready = font_read && font.load(font_data);
         if (!ready) {
-            Eden::Report("menu failure", "The launcher's shaders or font could not load; check the app's ui folder");
+            const std::string why = !shaders ? std::string{"The launcher's shaders could not be built"} :
+                !font_read ? "The launcher's font could not be read: " + font_path + " (" + std::strerror(errno) + ")" :
+                "The launcher's font is damaged: " + font_path + " (" + std::to_string(font_data.size()) + " bytes)";
+            Eden::Report("menu failure", why.c_str());
             glClearColor(0.7f, 0.08f, 0.16f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT);
             display.swap();
@@ -215,6 +222,8 @@ std::string RunApp(const std::string& launch_error, bool first_start) {
 
         const bool input_ready = radio_input_init();
         if (!input_ready) Eden::Report("menu failure", "The controller could not be opened");
+        // Once per launch: is a newer release listed? The launcher shows the answer when it comes.
+        Eden::UpdateNotice::Start();
         pe::ui::Launcher launcher(services, textures, fonts, first_start);
         int menu_volume = launcher.menu_volume();
         mixer->set_bus_gain(pe::audio::Bus::ui, MenuGain(menu_volume));
@@ -259,6 +268,13 @@ std::string RunApp(const std::string& launch_error, bool first_start) {
                 }
                 // The runner's crash request, to test the crash report in the launcher.
                 Eden::Crash::DevelopmentRequest(Eden::AppFile("crash-app.txt"));
+                // The check of what a stop that runs into its limit does (stop_limit.h): the app
+                // starts again, here from an idle launcher.
+                if (std::remove(Eden::AppFile("restart-app.txt").c_str()) == 0) {
+                    std::fprintf(stderr, "EDEN_DEV_RESTART requested=1\n");
+                    Eden::StopLimit::RestartNow();
+                    std::fprintf(stderr, "EDEN_DEV_RESTART refused=1\n");
+                }
             }
             if (!development_input.active) radio_input_poll();
             if (const auto sample = development_input.Sample(now)) {

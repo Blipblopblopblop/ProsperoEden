@@ -42,6 +42,22 @@ ONE = re.compile(r'"((?:[^"\\]|\\.)*)"')
 
 # What a translator cannot tell from the text alone.
 NOTES = {
+    "Update available": "Notification title: a newer release of this app is listed (not a game update).",
+    "Version {0} is on homebrew.page": "{0}: the newer release's number, for example 1.000.050; homebrew.page is a site's name and stays as it is.",
+    "Version {0} is ready to install.": "Update dialog: a newer release of this app; {0} is its number, for example 1.000.060.",
+    "Download size: {0}": "{0} is a size such as 36.4 MB.",
+    "Your games, saves and settings are kept.": "Update dialog: installing the new app version keeps the player's files.",
+    "Update now": "Button: download and install the newer release of this app now.",
+    "Skip": "Button and hint: not now (the dialog shows again the next time the app opens).",
+    "About {0} s left": "Time left while downloading; {0} is a number of seconds. Keep it short.",
+    "About {0} min left": "Time left while downloading; {0} is a number of minutes. Keep it short.",
+    "Version {0}": "{0} is the app's new version number, for example 1.000.060.",
+    "Preparing": "Update dialog headline while the download starts.",
+    "Unpacking": "Update dialog headline while the downloaded release is extracted.",
+    "What's new": "Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.",
+    "What's new in version {0}": "Title of the release notes view; {0} is the new version, for example 1.000.080.",
+    "Scroll": "Button hint: move through a long text (Up/Down).",
+    "The rest is on the app's page on homebrew.page.": "Shown at the end of release notes that were cut short; homebrew.page is a site's name and stays as it is.",
     "Select": "Button hint: choose the highlighted item (not the Select button).",
     "Back": "Button hint: go back one screen.",
     "Change": "Button hint: change the highlighted setting.",
@@ -166,6 +182,20 @@ NOTES = {
                          "exact. Keep the term the language's emulator players use, or translate it plainly.",
     "Skip CPU invalidation": "A switch: fewer checks when a game changes memory the graphics processor uses. "
                              "CPU stays.",
+    "Touchpad": "The DualSense controller's touch pad, pressed as a button. Use the name players know.",
+    "Button mapping": "Which controller button presses each of the game's buttons.",
+    "As usual": "The button mapping has not been changed.",
+    "Changed": "The button mapping has been changed.",
+    "Cross": "A DualSense button (the X-shaped one). Name the shape, not the letter.",
+    "Circle": "A DualSense button.",
+    "Square": "A DualSense button.",
+    "Triangle": "A DualSense button.",
+    "Options": "The DualSense button labelled OPTIONS: keep the label if the language's players do.",
+    "Create": "The DualSense button labelled CREATE: keep the label if the language's players do.",
+    "Left stick press": "Pressing the left stick down like a button.",
+    "Follows Settings": "A kind of setting that this game takes from the launcher's Settings menu.",
+    "{0} changed": "How many settings of a kind this game has of its own; {0} is a number.",
+    "This game": "The game has a button mapping of its own.",
     "{0}%": "A percentage (a volume): write it as the language does, for example with a space before the sign.",
     "The game ran out of graphics memory. Lower the resolution in Settings, Video (or in the game's own settings) "
     "and start it again.": "Why a game stopped. 'Settings, Video' is the menu path; 'the game's own settings' is the "

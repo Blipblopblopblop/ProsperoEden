@@ -43,6 +43,16 @@ msgstr "Tietoja"
 msgid "About ProsperoEden"
 msgstr "Tietoja ProsperoEdenistä"
 
+#. Time left while downloading; {0} is a number of minutes. Keep it short.
+#: pe/ui/update.cpp
+msgid "About {0} min left"
+msgstr "Noin {0} min jäljellä"
+
+#. Time left while downloading; {0} is a number of seconds. Keep it short.
+#: pe/ui/update.cpp
+msgid "About {0} s left"
+msgstr "Noin {0} s jäljellä"
+
 #. Label: which folders the app can read.
 #: pe/ui/browse.cpp
 msgid "ACCESS"
@@ -57,6 +67,10 @@ msgstr "Esteettömyys"
 msgid "ACCESSIBILITY"
 msgstr "ESTEETTÖMYYS"
 
+#: pe/ui/profiles.cpp
+msgid "Add"
+msgstr "Lisää"
+
 #. Label: a game's updates, DLC and mods.
 #: pe/ui/library.cpp
 msgid "ADD-ONS"
@@ -66,6 +80,10 @@ msgstr "LISÄOSAT"
 #: pe/ui/home.cpp
 msgid "Add-ons: {0}  /  Language: {1}"
 msgstr "Lisäosat: {0}  /  Kieli: {1}"
+
+#: pe/ui/profiles.cpp
+msgid "Added. Cross plays as this profile; left and right change its name."
+msgstr "Lisätty. Risti pelaa tällä profiililla; vasen ja oikea vaihtavat nimen."
 
 #: pe/ui/settings.cpp
 msgid "Adjust the essentials without leaving your library behind."
@@ -83,16 +101,21 @@ msgstr "AMD FSR"
 msgid "Another language"
 msgstr "Muu kieli"
 
-#: pe/ui/settings.cpp
-msgid "ASYNCHRONOUS SHADERS"
-msgstr "ASYNKRONISET VARJOSTIMET"
+#. The button mapping has not been changed.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "As usual"
+msgstr "Tavallinen"
 
 #. A switch. A shader is a small graphics program; keep the word the language's players use for it.
-#: pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Asynchronous shaders"
 msgstr "Asynkroniset varjostimet"
 
 #: pe/ui/settings.cpp
+msgid "ASYNCHRONOUS SHADERS"
+msgstr "ASYNKRONISET VARJOSTIMET"
+
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Audio"
 msgstr "Ääni"
 
@@ -105,7 +128,7 @@ msgid "Australia"
 msgstr "Australia"
 
 #. Button hint: go back one screen.
-#: pe/ui/browse.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "Back"
 msgstr "Takaisin"
 
@@ -132,18 +155,40 @@ msgstr "Selaa pelejä"
 msgid "Browse settings"
 msgstr "Selaa asetuksia"
 
+#. Which controller button presses each of the game's buttons.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Button mapping"
+msgstr "Painikkeiden määritys"
+
+#: pe/ui/settings.cpp
+msgid "BUTTON MAPPING"
+msgstr "PAINIKKEIDEN MÄÄRITYS"
+
+#: pe/ui/update.cpp
+msgid "Cancel"
+msgstr "Peruuta"
+
+#: pe/ui/update.cpp
+msgid "Cancelling"
+msgstr "Peruutetaan"
+
 #: eden_services.cpp
 msgid "Cannot read firmware/ in {0}. Install extracted firmware NCAs."
 msgstr "Kansiota firmware/ ei voi lukea sijainnissa {0}. Asenna puretut laiteohjelmiston NCA-tiedostot."
 
 #. Button hint: change the highlighted setting.
-#: pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Change"
 msgstr "Muuta"
 
 #: pe/ui/library.cpp
 msgid "Change mode. Saved per game."
 msgstr "Vaihda tilaa. Tallennetaan pelikohtaisesti."
+
+#. The button mapping has been changed.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Changed"
+msgstr "Muutettu"
 
 #. What a mod is made of: cheat codes.
 #: eden_services.cpp, host/fake_services.cpp
@@ -179,14 +224,23 @@ msgstr "Valitse kansio, jossa avaimesi, laiteohjelmisto ja pelisi ovat"
 msgid "Choose the language games use"
 msgstr "Valitse pelien käyttämä kieli"
 
+#. A DualSense button.
+#: pe/ui/game_options.cpp
+msgid "Circle"
+msgstr "Ympyrä"
+
+#: pe/ui/update.cpp
+msgid "Close"
+msgstr "Sulje"
+
+#. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Compile ahead"
+msgstr "Käännä etukäteen"
+
 #: pe/ui/settings.cpp
 msgid "COMPILE AHEAD"
 msgstr "KÄÄNNÄ ETUKÄTEEN"
-
-#. A switch: the program code a game used in earlier sessions is prepared (compiled) while the game starts. Keep it short.
-#: pe/ui/settings.cpp
-msgid "Compile ahead"
-msgstr "Käännä etukäteen"
 
 #: pe/ui/settings.cpp
 msgid "Compiles the code a game used before as it starts, so new areas stutter less."
@@ -208,7 +262,7 @@ msgstr "Ohjaimen pikatoiminnot ja tuetut ominaisuudet."
 msgid "CONTROLLERS"
 msgstr "OHJAIMET"
 
-#: pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Controls"
 msgstr "Ohjaus"
 
@@ -232,9 +286,14 @@ msgstr "Asetuksia ei voitu tallentaa. Yritä uudelleen."
 msgid "Could not save the folder. Please try again."
 msgstr "Kansiota ei voitu tallentaa. Yritä uudelleen."
 
-#: pe/ui/browse.cpp, pe/ui/library.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/profiles.cpp
 msgid "Could not save. Please try again."
 msgstr "Tallennus epäonnistui. Yritä uudelleen."
+
+#. The DualSense button labelled CREATE: keep the label if the language's players do.
+#: pe/ui/game_options.cpp
+msgid "Create"
+msgstr "Create"
 
 #. Button hint: make the folder a game's mods go in.
 #: pe/ui/library.cpp
@@ -250,8 +309,13 @@ msgstr "{0} luotu. Kopioi kunkin modin kansio sinne."
 msgid "Credits and setup"
 msgstr "Tekijät ja määritys"
 
+#. A DualSense button (the X-shaped one). Name the shape, not the letter.
+#: pe/ui/game_options.cpp
+msgid "Cross"
+msgstr "Risti"
+
 #. A per-game setting that follows the general setting; {0} is its value.
-#: pe/ui/library.cpp
+#: pe/ui/game_options.cpp
 msgid "Default ({0})"
 msgstr "Oletus ({0})"
 
@@ -297,6 +361,15 @@ msgstr "DIAGNOSTIIKKA"
 msgid "Docked"
 msgstr "Telakoitu"
 
+#. {0} is a size such as 36.4 MB.
+#: pe/ui/update.cpp
+msgid "Download size: {0}"
+msgstr "Latauksen koko: {0}"
+
+#: pe/ui/update.cpp
+msgid "Downloading"
+msgstr "Ladataan"
+
 #: pe/ui/settings.cpp
 msgid "Draws an effect once its shader is ready instead of pausing. Things can be missing for a moment."
 msgstr "Piirtää tehosteen, kun sen varjostin on valmis, eikä pysäytä peliä. Jotain voi puuttua hetken."
@@ -308,6 +381,10 @@ msgstr "Näyttää valikon pienen tekstin suurempana."
 #: settings_store.h
 msgid "Dutch"
 msgstr "Hollanti"
+
+#: pe/ui/profiles.cpp
+msgid "Each profile keeps its own save data, settings and recent games."
+msgstr "Jokaisella profiililla on omat tallennuksensa, asetuksensa ja viimeisimmät pelinsä."
 
 #: pe/ui/home.cpp
 msgid "Eden emulator for PlayStation 5"
@@ -348,36 +425,36 @@ msgstr "Vienti epäonnistui. Varmista, että pelitiedostojen kansioon voi kirjoi
 msgid "Exported to {0}."
 msgstr "Viety kansioon {0}."
 
+#. A switch: the emulated processor's floating-point math is less exact and faster. CPU stays.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Faster CPU emulation"
+msgstr "Nopeampi CPU-emulointi"
+
 #: pe/ui/settings.cpp
 msgid "FASTER CPU EMULATION"
 msgstr "NOPEAMPI CPU-EMULOINTI"
 
-#. A switch: the emulated processor's floating-point math is less exact and faster. CPU stays.
-#: pe/ui/settings.cpp
-msgid "Faster CPU emulation"
-msgstr "Nopeampi CPU-emulointi"
+#. A switch: memory transfers to the emulated graphics processor are less exact and faster. DMA is a name (unchanged).
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Faster DMA"
+msgstr "Nopeampi DMA"
 
 #: pe/ui/settings.cpp
 msgid "FASTER DMA"
 msgstr "NOPEAMPI DMA"
 
-#. A switch: memory transfers to the emulated graphics processor are less exact and faster. DMA is a name (unchanged).
-#: pe/ui/settings.cpp
-msgid "Faster DMA"
-msgstr "Nopeampi DMA"
-
 #: pe/ui/settings.cpp
 msgid "Faster games, at some cost in accuracy."
 msgstr "Nopeammat pelit tarkkuuden kustannuksella."
 
+#. A switch: the emulated graphics processor is less exact and faster. GPU stays.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Faster GPU emulation"
+msgstr "Nopeampi GPU-emulointi"
+
 #: pe/ui/settings.cpp
 msgid "FASTER GPU EMULATION"
 msgstr "NOPEAMPI GPU-EMULOINTI"
-
-#. A switch: the emulated graphics processor is less exact and faster. GPU stays.
-#: pe/ui/settings.cpp
-msgid "Faster GPU emulation"
-msgstr "Nopeampi GPU-emulointi"
 
 #: pe/ui/library.cpp
 msgid "FILE"
@@ -412,18 +489,27 @@ msgstr "Laiteohjelmiston SystemVersion-tiedot puuttuvat tai niitä ei voi lukea.
 msgid "FOLDERS"
 msgstr "KANSIOT"
 
+#. A kind of setting that this game takes from the launcher's Settings menu.
+#: pe/ui/library.cpp
+msgid "Follows Settings"
+msgstr "Kuten Asetuksissa"
+
+#: pe/ui/game_options.cpp
+msgid "For every controller. A game can have its own."
+msgstr "Kaikille ohjaimille. Pelillä voi olla oma."
+
 #: pe/ui/library.cpp
 msgid "FORMAT"
 msgstr "MUOTO"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "FPS overlay"
+msgstr "FPS-laskuri"
 
 #. Label: the frames-per-second counter drawn over a game.
 #: pe/ui/settings.cpp
 msgid "FPS OVERLAY"
 msgstr "FPS-LASKURI"
-
-#: pe/ui/settings.cpp
-msgid "FPS overlay"
-msgstr "FPS-laskuri"
 
 #: settings_store.h
 msgid "French"
@@ -467,13 +553,13 @@ msgstr "PELITIEDOSTOT"
 msgid "Game settings"
 msgstr "Pelin asetukset"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Game volume"
+msgstr "Peliäänet"
+
 #: pe/ui/settings.cpp
 msgid "GAME VOLUME"
 msgstr "PELIÄÄNET"
-
-#: pe/ui/settings.cpp
-msgid "Game volume"
-msgstr "Peliäänet"
 
 #: pe/ui/settings.cpp
 msgid "Game volume, and the sounds of this menu."
@@ -585,7 +671,7 @@ msgstr "Korea"
 msgid "Korean"
 msgstr "Korea"
 
-#: pe/ui/browse.cpp, pe/ui/settings.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Language"
 msgstr "Kieli"
 
@@ -614,6 +700,11 @@ msgstr "Viimeksi avattu peli"
 #: pe/ui/home.cpp
 msgid "Launch game"
 msgstr "Käynnistä peli"
+
+#. Pressing the left stick down like a button.
+#: pe/ui/game_options.cpp
+msgid "Left stick press"
+msgstr "Vasemman sauvan painallus"
 
 #: pe/ui/settings.cpp
 msgid "Less exact floating-point math: faster, and a few games misbehave."
@@ -670,20 +761,20 @@ msgstr "MODIT"
 msgid "Mods"
 msgstr "Modit"
 
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Mute"
+msgstr "Mykistys"
+
 #: pe/ui/settings.cpp
 msgid "MUTE"
 msgstr "MYKISTYS"
-
-#: pe/ui/settings.cpp
-msgid "Mute"
-msgstr "Mykistys"
 
 #: pe/ui/settings.cpp
 msgid "Muted"
 msgstr "Mykistetty"
 
 #. Button hint: move the highlight.
-#: pe/ui/home.cpp
+#: pe/ui/home.cpp, pe/ui/update.cpp
 msgid "Navigate"
 msgstr "Siirry"
 
@@ -695,6 +786,10 @@ msgstr "Lähin"
 #: pe/ui/settings.cpp
 msgid "Needs attention"
 msgstr "Vaatii huomiota"
+
+#: pe/ui/profiles.cpp
+msgid "New profile"
+msgstr "Uusi profiili"
 
 #. {0} is the folder used the next time the app starts.
 #: pe/ui/browse.cpp
@@ -755,12 +850,12 @@ msgid "Nothing to import"
 msgstr "Ei tuotavaa"
 
 #. A setting that is switched off.
-#: pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Off"
 msgstr "Pois"
 
 #. A setting that is switched on.
-#: pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "On"
 msgstr "Päällä"
 
@@ -774,13 +869,22 @@ msgid "OPEN"
 msgstr "AVAA"
 
 #. Button hint: open the highlighted folder.
-#: pe/ui/browse.cpp, pe/ui/library.cpp
+#: pe/ui/browse.cpp, pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Open"
 msgstr "Avaa"
+
+#: pe/ui/update.cpp
+msgid "Open it again to use version {0}."
+msgstr "Avaa se uudelleen käyttääksesi versiota {0}."
 
 #: pe/ui/home.cpp
 msgid "Open library"
 msgstr "Avaa kirjasto"
+
+#. The DualSense button labelled OPTIONS: keep the label if the language's players do.
+#: pe/ui/game_options.cpp
+msgid "Options"
+msgstr "Options"
 
 #. Label: see 'Output resolution'.
 #: pe/ui/settings.cpp
@@ -793,7 +897,7 @@ msgid "Output resolution"
 msgstr "Lähtöresoluutio"
 
 #. Button hint: jump a page of the list (L1 / R1).
-#: pe/ui/browse.cpp
+#: pe/ui/browse.cpp, pe/ui/update.cpp
 msgid "Page"
 msgstr "Sivu"
 
@@ -807,13 +911,29 @@ msgid "Patch"
 msgstr "Paikkaus"
 
 #. A settings category: options that make games run faster, at some cost in accuracy.
-#: pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Performance"
 msgstr "Suorituskyky"
 
 #: pe/ui/settings.cpp
 msgid "PERFORMANCE"
 msgstr "SUORITUSKYKY"
+
+#: pe/ui/profiles.cpp
+msgid "Play as"
+msgstr "Pelaa tällä"
+
+#: pe/ui/profiles.cpp
+msgid "Playing"
+msgstr "Pelaa"
+
+#: pe/ui/settings.cpp
+msgid "PLAYING"
+msgstr "PELAA"
+
+#: pe/ui/profiles.cpp
+msgid "Playing as {0}"
+msgstr "Pelaaja: {0}"
 
 #: settings_store.h
 msgid "Polish"
@@ -836,6 +956,11 @@ msgstr "Pohjana Eden"
 msgid "PREFERENCES"
 msgstr "VALINNAT"
 
+#. Update dialog headline while the download starts.
+#: pe/ui/update.cpp
+msgid "Preparing"
+msgstr "Valmistellaan"
+
 #. Asked before a save is imported over the one in use.
 #: pe/ui/library.cpp
 msgid "Press again to replace this game's save. The current one is backed up."
@@ -853,9 +978,25 @@ msgstr "prod.keys löytyi"
 msgid "prod.keys missing"
 msgstr "prod.keys puuttuu"
 
+#: pe/ui/profiles.cpp, pe/ui/settings.cpp
+msgid "Profiles"
+msgstr "Profiilit"
+
+#: pe/ui/settings.cpp
+msgid "PROFILES"
+msgstr "PROFIILIT"
+
 #: pe/ui/browse.cpp
 msgid "PROJECT CREDITS"
 msgstr "PROJEKTIN TEKIJÄT"
+
+#: pe/ui/update.cpp
+msgid "ProsperoEden closes now."
+msgstr "ProsperoEden sulkeutuu nyt."
+
+#: pe/ui/update.cpp
+msgid "ProsperoEden closes to finish the update."
+msgstr "ProsperoEden sulkeutuu päivityksen viimeistelemiseksi."
 
 #: pe/ui/browse.cpp
 msgid "ProsperoEden is an unofficial PS5 port brought to you by BlackBearReloaded."
@@ -865,6 +1006,10 @@ msgstr "ProsperoEden on epävirallinen PS5-versio, jonka tarjoaa BlackBearReload
 #: eden_services.cpp, host/fake_services.cpp
 msgid "ProsperoEden stopped because of an error. A report was saved to {0}."
 msgstr "ProsperoEden pysähtyi virheen vuoksi. Raportti tallennettiin kohteeseen {0}."
+
+#: pe/ui/update.cpp
+msgid "ProsperoEden was not changed."
+msgstr "ProsperoEdeniä ei muutettu."
 
 #. Why a game did not start.
 #: eden_services.cpp
@@ -880,14 +1025,14 @@ msgstr "PS5-VERSIO"
 msgid "PS5 EDITION  /  {0}"
 msgstr "PS5-VERSIO  /  {0}"
 
+#. A switch, on by default: what a game reads back from the graphics processor is kept exact. Keep the term the language's emulator players use, or translate it plainly.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Reactive flushing"
+msgstr "Reaktiivinen tyhjennys"
+
 #: pe/ui/settings.cpp
 msgid "REACTIVE FLUSHING"
 msgstr "REAKTIIVINEN TYHJENNYS"
-
-#. A switch, on by default: what a game reads back from the graphics processor is kept exact. Keep the term the language's emulator players use, or translate it plainly.
-#: pe/ui/settings.cpp
-msgid "Reactive flushing"
-msgstr "Reaktiivinen tyhjennys"
 
 #: pe/ui/settings.cpp
 msgid "Ready"
@@ -907,7 +1052,7 @@ msgid "Reduce motion"
 msgstr "Vähennä liikettä"
 
 #. Setting: how many times a second the TV picture is refreshed while a game runs (60 or 120 Hz).
-#: pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Refresh rate"
 msgstr "Virkistystaajuus"
 
@@ -920,7 +1065,15 @@ msgstr "VIRKISTYSTAAJUUS"
 msgid "REGION"
 msgstr "ALUE"
 
-#: pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/profiles.cpp
+msgid "Remove"
+msgstr "Poista"
+
+#: pe/ui/profiles.cpp
+msgid "Rename"
+msgstr "Nimeä"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Renderer"
 msgstr "Renderöijä"
 
@@ -928,7 +1081,11 @@ msgstr "Renderöijä"
 msgid "RENDERER"
 msgstr "RENDERÖIJÄ"
 
-#: pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp
+msgid "Reset"
+msgstr "Palauta"
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Resolution"
 msgstr "Resoluutio"
 
@@ -936,7 +1093,11 @@ msgstr "Resoluutio"
 msgid "RESOLUTION"
 msgstr "RESOLUUTIO"
 
-#: eden_services.cpp
+#: pe/ui/game_options.cpp
+msgid "Right stick press"
+msgstr "Oikean sauvan painallus"
+
+#: eden_services.cpp, pe/ui/launcher.cpp
 msgid "ROM missing from the game files folder"
 msgstr "ROM puuttuu pelitiedostojen kansiosta"
 
@@ -964,12 +1125,12 @@ msgstr "Tallennetut tiedot"
 msgid "Save folder found"
 msgstr "Tallennuskansio löytyi"
 
-#: pe/ui/library.cpp
+#: pe/ui/game_options.cpp, pe/ui/library.cpp
 msgid "Saved for this game. Applies on next launch."
 msgstr "Tallennettu tälle pelille. Tulee voimaan seuraavalla käynnistyksellä."
 
 #. Shown after choosing 120 Hz.
-#: pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Saved. A display that cannot show 120 Hz stays at 60 Hz."
 msgstr "Tallennettu. Näyttö, joka ei tue 120 Hz:ää, pysyy 60 Hz:ssä."
 
@@ -981,8 +1142,13 @@ msgstr "Tallennettu. Tulee voimaan, kun peli käynnistyy."
 msgid "Saved. Reopen ProsperoEden to use this folder."
 msgstr "Tallennettu. Avaa ProsperoEden uudelleen, niin kansio otetaan käyttöön."
 
+#. Button hint: move through a long text (Up/Down).
+#: pe/ui/update.cpp
+msgid "Scroll"
+msgstr "Vieritä"
+
 #. Button hint: choose the highlighted item (not the Select button).
-#: pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/home.cpp, pe/ui/library.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "Select"
 msgstr "Valitse"
 
@@ -997,11 +1163,6 @@ msgstr "Aloita valitsemalla peli"
 #: pe/ui/library.cpp
 msgid "Select a readable game to configure its mode."
 msgstr "Valitse luettavissa oleva peli ja määritä sen konsolitila."
-
-#. Select is a button's name (unchanged).
-#: pe/ui/settings.cpp
-msgid "Select is the touchpad button on PS5."
-msgstr "Select on PS5:n kosketusalueen painike."
 
 #. Heading: the language highlighted in the list.
 #: pe/ui/browse.cpp
@@ -1039,10 +1200,6 @@ msgid "Setup validation failed. Check that firmware and key files are readable a
 msgstr "Määrityksen tarkistus epäonnistui. Varmista, että laiteohjelmisto ja avaintiedostot ovat luettavissa ja kelvollisia."
 
 #: pe/ui/settings.cpp
-msgid "Shortcuts during a game, and vibration."
-msgstr "Pikatoiminnot pelin aikana ja värinä."
-
-#: pe/ui/settings.cpp
 msgid "Show or hide the FPS overlay"
 msgstr "Näytä tai piilota FPS-laskuri"
 
@@ -1050,14 +1207,19 @@ msgstr "Näytä tai piilota FPS-laskuri"
 msgid "SIZE"
 msgstr "KOKO"
 
+#. Button and hint: not now (the dialog shows again the next time the app opens).
+#: pe/ui/update.cpp
+msgid "Skip"
+msgstr "Ohita"
+
+#. A switch: fewer checks when a game changes memory the graphics processor uses. CPU stays.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Skip CPU invalidation"
+msgstr "Ohita CPU-mitätöinti"
+
 #: pe/ui/settings.cpp
 msgid "SKIP CPU INVALIDATION"
 msgstr "OHITA CPU-MITÄTÖINTI"
-
-#. A switch: fewer checks when a game changes memory the graphics processor uses. CPU stays.
-#: pe/ui/settings.cpp
-msgid "Skip CPU invalidation"
-msgstr "Ohita CPU-mitätöinti"
 
 #: pe/ui/settings.cpp
 msgid "Skips some checks when a game changes memory the GPU uses: faster, and textures can be stale."
@@ -1074,6 +1236,15 @@ msgstr "Espanja"
 #: settings_store.h
 msgid "Spanish (Latin America)"
 msgstr "Espanja (Latinalainen Amerikka)"
+
+#. A DualSense button.
+#: pe/ui/game_options.cpp
+msgid "Square"
+msgstr "Neliö"
+
+#: pe/ui/profiles.cpp
+msgid "Square again takes {0} off the list. Its save data stays on the console."
+msgstr "Neliö uudelleen poistaa profiilin {0} luettelosta. Tallennukset jäävät konsoliin."
 
 #. The app creates its user the first time a game runs.
 #: eden_services.cpp
@@ -1096,6 +1267,10 @@ msgstr "Käytä omia tiedostojasi"
 #: eden_services.cpp
 msgid "Taiwan"
 msgstr "Taiwan"
+
+#: pe/ui/profiles.cpp
+msgid "Taken off the list. Its save data stays on the console."
+msgstr "Poistettu luettelosta. Tallennukset jäävät konsoliin."
 
 #: settings_store.h
 msgid "Thai"
@@ -1123,6 +1298,19 @@ msgstr "Peliltä loppui grafiikkamuisti. Pienennä resoluutiota kohdassa Asetuks
 msgid "The language games use when they offer it."
 msgstr "Kieli, jota pelit käyttävät, jos ne tukevat sitä."
 
+#: pe/ui/profiles.cpp
+msgid "The profile that is playing stays. Choose another one first."
+msgstr "Pelaava profiili pysyy. Valitse ensin toinen."
+
+#. Shown at the end of release notes that were cut short; homebrew.page is a site's name and stays as it is.
+#: pe/ui/update.cpp
+msgid "The rest is on the app's page on homebrew.page."
+msgstr "Loput ovat sovelluksen sivulla homebrew.pagessa."
+
+#: pe/ui/update.cpp
+msgid "The update could not finish"
+msgstr "Päivitystä ei voitu viedä loppuun"
+
 #: pe/ui/browse.cpp
 msgid "THIS FOLDER"
 msgstr "TÄMÄ KANSIO"
@@ -1130,6 +1318,11 @@ msgstr "TÄMÄ KANSIO"
 #: pe/ui/browse.cpp
 msgid "This folder cannot be opened."
 msgstr "Tätä kansiota ei voi avata."
+
+#. The game has a button mapping of its own.
+#: pe/ui/game_options.cpp
+msgid "This game"
+msgstr "Tämä peli"
 
 #: eden_services.cpp
 msgid "This game has no save to export yet."
@@ -1144,6 +1337,20 @@ msgstr "Tämän pelin asetuksia ei voi tallentaa (nimiketunnus puuttuu)."
 msgid "To import, copy a Ryujinx folder to ryujinx/ or a save to save-import/{0}/, next to roms/."
 msgstr "Tuontia varten kopioi Ryujinx-kansio kansioon ryujinx/ tai tallennus kansioon save-import/{0}/, kansion roms/ viereen."
 
+#. The DualSense controller's touch pad, pressed as a button. Use the name players know.
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Touchpad"
+msgstr "Kosketuslevy"
+
+#. A DualSense button.
+#: pe/ui/game_options.cpp
+msgid "Triangle"
+msgstr "Kolmio"
+
+#: pe/ui/update.cpp
+msgid "Try again"
+msgstr "Yritä uudelleen"
+
 #. Button hint: switch the highlighted mod on or off.
 #: pe/ui/library.cpp
 msgid "Turn on or off"
@@ -1153,10 +1360,29 @@ msgstr "Ota käyttöön tai pois"
 msgid "Unavailable"
 msgstr "Ei käytettävissä"
 
+#. Update dialog headline while the downloaded release is extracted.
+#: pe/ui/update.cpp
+msgid "Unpacking"
+msgstr "Puretaan"
+
 #. Short tag on the 'Parent folder' row.
 #: pe/ui/browse.cpp
 msgid "UP"
 msgstr "YLÖS"
+
+#. Notification title: a newer release of this app is listed (not a game update).
+#: pe/ui/launcher.cpp, pe/ui/update.cpp
+msgid "Update available"
+msgstr "Päivitys saatavilla"
+
+#. Button: download and install the newer release of this app now.
+#: pe/ui/update.cpp
+msgid "Update now"
+msgstr "Päivitä nyt"
+
+#: pe/ui/update.cpp
+msgid "Update ready"
+msgstr "Päivitys valmis"
 
 #. A game update; {0} is its version, for example 1.2.0.
 #: eden_services.cpp, host/fake_services.cpp
@@ -1167,7 +1393,7 @@ msgstr "Päivitys {0}"
 msgid "UPDATES, DLC"
 msgstr "PÄIVITYKSET, DLC"
 
-#: pe/ui/library.cpp, pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
 msgid "Upscaling filter"
 msgstr "Skaalaussuodatin"
 
@@ -1187,13 +1413,28 @@ msgstr "Käytä purettuja laiteohjelmiston NCA-tiedostoja. Valitse kansio kohdas
 msgid "Use this folder"
 msgstr "Käytä tätä kansiota"
 
+#. {0} is the app's new version number, for example 1.000.060.
+#: pe/ui/update.cpp
+msgid "Version {0}"
+msgstr "Versio {0}"
+
+#. {0}: the newer release's number, for example 1.000.050; homebrew.page is a site's name and stays as it is.
+#: pe/ui/launcher.cpp
+msgid "Version {0} is on homebrew.page"
+msgstr "Versio {0} on osoitteessa homebrew.page"
+
+#. Update dialog: a newer release of this app; {0} is its number, for example 1.000.060.
+#: pe/ui/update.cpp
+msgid "Version {0} is ready to install."
+msgstr "Versio {0} on valmis asennettavaksi."
+
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp
+msgid "Vibration"
+msgstr "Värinä"
+
 #: pe/ui/settings.cpp
 msgid "VIBRATION"
 msgstr "VÄRINÄ"
-
-#: pe/ui/settings.cpp
-msgid "Vibration"
-msgstr "Värinä"
 
 #: pe/ui/settings.cpp
 msgid "Vibration off"
@@ -1204,6 +1445,10 @@ msgid "Vibration on"
 msgstr "Värinä päällä"
 
 #: pe/ui/settings.cpp
+msgid "Vibration, button mapping and the shortcuts during a game."
+msgstr "Värinä, painikkeiden määritys ja pikanäppäimet pelin aikana."
+
+#: pe/ui/game_options.cpp, pe/ui/library.cpp, pe/ui/settings.cpp
 msgid "Video"
 msgstr "Video"
 
@@ -1220,14 +1465,38 @@ msgstr "NÄYTÄ KAIKKI PELIT"
 msgid "Vulkan (recommended)"
 msgstr "Vulkan (suositeltu)"
 
+#. Button on the update dialog: opens the new release's notes (what changes in it). Keep it short.
+#: pe/ui/update.cpp
+msgid "What's new"
+msgstr "Uutta"
+
+#. Title of the release notes view; {0} is the new version, for example 1.000.080.
+#: pe/ui/update.cpp
+msgid "What's new in version {0}"
+msgstr "Uutta versiossa {0}"
+
+#: pe/ui/settings.cpp
+msgid "Who is playing. Each profile keeps its own save data and settings."
+msgstr "Kuka pelaa. Jokaisella profiililla on omat tallennuksensa ja asetuksensa."
+
 #: pe/ui/library.cpp
 msgid "Your games"
 msgstr "Omat pelit"
+
+#. Update dialog: installing the new app version keeps the player's files.
+#: pe/ui/update.cpp
+msgid "Your games, saves and settings are kept."
+msgstr "Pelisi, tallennukset ja asetukset säilyvät."
 
 #. Headline when no game has been played yet.
 #: pe/ui/home.cpp
 msgid "Your next adventure"
 msgstr "Seuraava seikkailusi"
+
+#. How many settings of a kind this game has of its own; {0} is a number.
+#: pe/ui/library.cpp
+msgid "{0} changed"
+msgstr "{0} muutettu"
 
 #. {0} is how many DLC (add-on content) a game has installed.
 #: eden_services.cpp, host/fake_services.cpp
@@ -1300,7 +1569,7 @@ msgid "{0} of {1} on"
 msgstr "{0}/{1} käytössä"
 
 #. A percentage (a volume): write it as the language does, for example with a space before the sign.
-#: pe/ui/settings.cpp
+#: pe/ui/game_options.cpp, pe/ui/settings.cpp, pe/ui/update.cpp
 msgid "{0}%"
 msgstr "{0} %"
 

@@ -179,15 +179,42 @@ void pictures(Stage &s)
     s.press({Key::triangle});
     s.wait(0.8f);
     s.shoot("09-game-settings");
-    s.press({Key::down, Key::right});
+    // The game's own Video: a renderer of its own, then the output's refresh rate.
+    s.press({Key::down, Key::cross});
+    s.wait(0.6f);
+    s.shoot("49-game-video");
+    s.press({Key::right});
     s.wait(0.6f);
     s.shoot("10-game-settings-changed");
-    // The output's refresh rate for this game.
     s.press({Key::down, Key::down, Key::down, Key::right, Key::right});
     s.wait(0.6f);
     s.shoot("40-game-refresh");
+    // Its own Performance: Compile ahead switched on for this game only.
+    s.press({Key::circle, Key::down, Key::cross, Key::right, Key::right});
+    s.wait(0.6f);
+    s.shoot("50-game-performance");
+    // Its own Controls: a button mapping of its own, and A moved to another button.
+    s.press({Key::circle, Key::down, Key::down, Key::cross, Key::down, Key::right});
+    s.wait(0.6f);
+    s.shoot("51-game-controls");
+    s.press({Key::cross, Key::right});
+    s.wait(0.6f);
+    s.shoot("52-game-mapping");
+    {
+        const pe::ui::GameSettings game = s.services.game_settings(0);
+        if (game.renderer != 0 || game.refresh != 1 || game.performance[0] != 1 || !game.own_mapping ||
+            game.mapping[0] != 2 || game.mapping[3] != 1)
+        {
+            std::fprintf(stderr, "error: the game's own settings did not reach the settings\n");
+            s.ok = false;
+        }
+    }
+    // Back in the game's settings: the kinds it changed say how many.
+    s.press({Key::circle, Key::circle});
+    s.wait(0.6f);
+    s.shoot("53-game-settings-changed");
     // The game's mods: the row, the list, one switched on, and a game that has none.
-    s.press({Key::down});
+    s.press({Key::down, Key::down});
     s.wait(0.6f);
     s.shoot("35-game-mods-row");
     s.press({Key::cross});
@@ -226,13 +253,164 @@ void pictures(Stage &s)
     s.wait(0.32f);
     s.shoot("12-launching-late");
 
+    // A newer release the app cannot install itself: the notification at the top right, for ten
+    // seconds.
+    s.restart();
+    s.wait(1.0f);
+    s.services.update_version = "v1.000.060";
+    s.services.update_installable = false;
+    s.wait(1.2f);
+    s.shoot("58-update-notice");
+    s.wait(9.5f);
+    s.shoot("59-update-notice-gone");
+    s.services.update_installable = true;
+
+    // One it can: the offer when the app opens, then the install (a step per frame in the
+    // preview: 40 preparing, 360 downloading, 120 unpacking).
+    s.services.update_version = "v1.000.060";
+    s.restart(true);
+    s.wait(2.6f);
+    s.shoot("70-update-offer");
+    s.press({Key::right, Key::right});
+    s.wait(0.4f);
+    s.shoot("71-update-offer-skip");
+    s.press({Key::left, Key::left, Key::cross});
+    s.wait(0.3f);
+    s.shoot("72-update-preparing");
+    s.wait(3.2f);
+    s.shoot("73-update-downloading");
+    s.wait(3.5f);
+    s.shoot("74-update-unpacking");
+    s.wait(2.2f);
+    s.shoot("75-update-ready");
+    s.wait(0.9f);
+    s.shoot("76-update-ready-late");
+    // Cancelled while it downloads: the dialog closes, nothing changed.
+    s.services.update_version = "v1.000.060";
+    s.restart(true);
+    s.wait(2.6f);
+    s.press({Key::cross});
+    s.wait(1.5f);
+    s.press({Key::circle});
+    s.wait(0.1f);
+    s.shoot("77-update-cancelling");
+    s.wait(1.0f);
+    s.shoot("78-update-cancelled");
+    // A failure: what went wrong, and Try again or Close.
+    s.services.update_version = "v1.000.060";
+    s.services.update_fails = true;
+    s.restart(true);
+    s.wait(2.6f);
+    s.press({Key::cross});
+    s.wait(7.4f);
+    s.shoot("79-update-failed");
+    s.services.update_fails = false;
+
+    // The release notes: What's new on the offer opens them; they scroll a few lines at a time
+    // (Up/Down) or a page (L1/R1), give a little at the end, and Circle goes back to the offer.
+    s.services.update_version = "v1.000.060";
+    s.restart(true);
+    s.wait(2.6f);
+    s.press({Key::right});
+    s.wait(0.4f);
+    s.shoot("80-update-offer-whats-new");
+    s.press({Key::cross});
+    s.wait(0.12f);
+    s.shoot("81-update-notes-opening");
+    s.wait(1.0f);
+    s.shoot("82-update-notes");
+    s.press({Key::down, Key::down}, 0.15f);
+    s.wait(0.6f);
+    s.shoot("83-update-notes-scrolled");
+    s.press({Key::r1, Key::r1, Key::r1}, 0.15f);
+    s.wait(0.7f);
+    s.shoot("84-update-notes-end");
+    s.press({Key::down});
+    s.wait(0.05f);
+    s.shoot("85-update-notes-end-give");
+    s.press({Key::right});
+    s.wait(0.4f);
+    s.shoot("86-update-notes-back-button");
+    s.press({Key::circle});
+    s.wait(0.5f);
+    s.shoot("87-update-offer-after-notes");
+    // A release without notes: two buttons, as before.
+    const std::string notes = s.services.update_notes;
+    s.services.update_notes.clear();
+    s.services.update_version = "v1.000.060";
+    s.restart(true);
+    s.wait(2.6f);
+    s.shoot("88-update-offer-no-notes");
+    // Notes the catalog cut short end with where the rest is.
+    s.services.update_notes = notes;
+    s.services.update_notes_truncated = true;
+    s.services.update_version = "v1.000.060";
+    s.restart(true);
+    s.wait(2.6f);
+    s.press({Key::triangle});
+    s.wait(1.2f);
+    // (The preview draws only when it takes a picture; the notes are laid out when first drawn.)
+    s.shoot("89-update-notes-truncated");
+    s.press({Key::r1, Key::r1, Key::r1, Key::r1}, 0.15f);
+    s.wait(0.8f);
+    s.shoot("89-update-notes-truncated-end");
+    s.services.update_notes_truncated = false;
+
+    // A game's file taken away while the menu shows it: within a moment it leaves the home screen
+    // (another recent game takes its place) and the Library.
+    s.restart();
+    s.wait(1.0f);
+    for (const pe::ui::Game &game : s.services.games())
+        if (game.name == "Echoes of the Valley")
+            s.services.removed.push_back(game.file);
+    s.wait(2.5f);
+    s.shoot("56-home-game-removed");
+    s.press({Key::up, Key::cross});
+    s.wait(1.2f);
+    s.shoot("57-library-game-removed");
+    s.services.removed.clear();
+
     // Settings and its dialogs.
     s.restart();
     s.wait(1.0f);
     s.press({Key::up, Key::right, Key::cross});
     s.wait(1.0f);
     s.shoot("13-settings");
+    // Profiles, the first category: a new one, playing as it, and taking it off the list again.
     s.press({Key::cross});
+    s.wait(0.8f);
+    s.shoot("60-profiles");
+    // The highlight follows the selection (it glides: the picture is taken once it has arrived).
+    s.press({Key::down});
+    s.wait(0.6f);
+    s.shoot("60b-profiles-moved");
+    s.press({Key::up});
+    s.wait(0.2f);
+    s.press({Key::down, Key::cross});
+    s.wait(0.6f);
+    s.shoot("61-profile-added");
+    s.press({Key::cross});
+    s.wait(0.6f);
+    s.shoot("62-profile-playing");
+    {
+        const std::vector<pe::ui::Profile> people = s.services.profiles();
+        bool reached = people.size() == 2 && !people[0].playing && people[1].playing;
+        // The one that is playing cannot be taken off the list; the other one can, asked twice.
+        s.press({Key::square, Key::square});
+        reached = reached && s.services.profiles().size() == 2;
+        s.press({Key::up, Key::cross, Key::down, Key::square});
+        s.wait(0.6f);
+        s.shoot("63-profile-remove-asked");
+        reached = reached && s.services.profiles().size() == 2;
+        s.press({Key::square});
+        reached = reached && s.services.profiles().size() == 1 && s.services.profiles()[0].playing;
+        if (!reached)
+        {
+            std::fprintf(stderr, "error: the profiles did not reach the services\n");
+            s.ok = false;
+        }
+    }
+    s.press({Key::circle, Key::down, Key::cross});
     s.wait(0.8f);
     s.shoot("14-video");
     s.press({Key::down, Key::right});
@@ -289,6 +467,23 @@ void pictures(Stage &s)
     s.press({Key::circle, Key::down, Key::cross});
     s.wait(0.8f);
     s.shoot("17-controls");
+    // The button mapping: B moved to Circle takes A's place (A gets Cross), then all back.
+    s.press({Key::down});
+    s.wait(0.4f);
+    s.shoot("54-controls-mapping-row");
+    s.press({Key::cross, Key::down, Key::right});
+    s.wait(0.6f);
+    s.shoot("55-mapping");
+    const pe::ui::ButtonMapping moved = s.services.preferences().mapping;
+    s.press({Key::square});
+    s.wait(0.4f);
+    if (moved[0] != 0 || moved[1] != 1 || s.services.preferences().mapping != pe::ui::kDefaultMapping)
+    {
+        std::fprintf(stderr, "error: the button mapping did not reach the settings\n");
+        s.ok = false;
+    }
+    s.press({Key::circle});
+    s.wait(0.4f);
     s.press({Key::circle, Key::down, Key::cross});
     s.wait(0.8f);
     s.shoot("30-accessibility");
@@ -313,6 +508,13 @@ void pictures(Stage &s)
              Key::down, Key::down, Key::cross});
     s.wait(0.8f);
     s.shoot("22-language-chosen");
+
+    // Two profiles: the home screen names who is playing.
+    s.services.add_profile();
+    s.restart();
+    s.wait(2.0f);
+    s.shoot("64-home-two-profiles");
+    s.services.people.resize(1);
 
     // About.
     s.restart();
@@ -392,6 +594,28 @@ void tour(Stage &s)
     s.press({Key::down}, 0.5f);
     s.press({Key::cross});
     s.wait(1.2f);
+}
+
+// PE_TOUR=update: the app opens with a newer release listed; the offer, Update now, the download
+// and unpacking, and ProsperoEden closing for the update.
+void update_tour(Stage &s)
+{
+    s.services.connected_controllers = 0b0001;
+    s.services.update_version = "v1.000.060";
+    s.restart(true);
+    s.wait(3.4f);
+    // What's new: the notes open, scroll down a little at a time, a page, then back.
+    s.press({Key::right}, 0.6f);
+    s.press({Key::cross}, 1.6f);
+    s.press({Key::down}, 0.7f);
+    s.press({Key::down}, 0.7f);
+    s.press({Key::down}, 0.9f);
+    s.press({Key::r1}, 1.2f);
+    s.press({Key::r1}, 1.4f);
+    s.press({Key::circle}, 0.9f);
+    s.press({Key::left}, 0.6f);
+    s.press({Key::cross});
+    s.wait(10.5f);
 }
 
 } // namespace
@@ -627,7 +851,10 @@ int main(int argc, char **argv)
                 output, nullptr, {}, {}, make_tour, true, {}};
     stage.pixels.resize(static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4);
     stbi_flip_vertically_on_write(1);
-    if (make_tour)
+    const char *which_tour = std::getenv("PE_TOUR");
+    if (make_tour && which_tour && std::strcmp(which_tour, "update") == 0)
+        update_tour(stage);
+    else if (make_tour)
         tour(stage);
     else
         pictures(stage);
