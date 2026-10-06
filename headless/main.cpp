@@ -1233,8 +1233,15 @@ int main(int argc, char** argv) {
                                 Settings::values.players.GetValue()[index].connected = present;
                                 auto* controller = system.HIDCore().GetEmulatedControllerByIndex(index);
                                 if (present) {
-                                    controller->SetNpadStyleIndex(Core::HID::NpadStyleIndex::Fullkey);
-                                    controller->Connect();
+                                    // A Pro Controller, else a single Joy-Con for games that take
+                                    // only those (Just Dance); Connect refuses a style the game does not.
+                                    for (const auto style : {Core::HID::NpadStyleIndex::Fullkey,
+                                                             Core::HID::NpadStyleIndex::JoyconRight,
+                                                             Core::HID::NpadStyleIndex::JoyconLeft}) {
+                                        controller->SetNpadStyleIndex(style);
+                                        controller->Connect();
+                                        if (controller->IsConnected()) break;
+                                    }
                                 } else {
                                     controller->Disconnect();
                                 }

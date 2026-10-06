@@ -1608,6 +1608,15 @@ if(rumble_outputs_at LESS 0)
 endif()
 string(REPLACE "${rumble_outputs}" "${rumble_outputs}    if (output_params[LeftIndex].Get(\"engine\", \"\").empty()) {\n        const auto rumble_port = std::to_string(Service::HID::NpadIdTypeToIndex(npad_id_type));\n        output_params[LeftIndex] = Common::ParamPackage{\"engine:virtual_gamepad,port:\" + rumble_port + \",pad:1\"};\n        output_params[RightIndex] = Common::ParamPackage{\"engine:virtual_gamepad,port:\" + rumble_port + \",pad:2\"};\n    }\n"
     controller_source "${controller_source}")
+# A game that takes only single Joy-Cons (Just Dance) disconnected every Pro Controller: upstream
+# falls a Pro Controller back only to a Joy-Con pair. Fall back to a single right, else left, Joy-Con.
+set(unsupported_style "    LOG_ERROR(Service_HID, \"Controller type {} is not supported. Disconnecting controller\", npad_type.load());")
+string(FIND "${controller_source}" "${unsupported_style}" unsupported_style_at)
+if(unsupported_style_at LESS 0)
+    message(FATAL_ERROR "Pinned controller style fallback changed")
+endif()
+string(REPLACE "${unsupported_style}" "    // ProsperoEden: fallback Pro controllers to a single Joy-Con\n    if (npad_type == NpadStyleIndex::Fullkey && (supported_style_tag.joycon_right || supported_style_tag.joycon_left)) {\n        LOG_WARNING(Service_HID, \"Reconnecting controller type {} as a single Joy-Con\", npad_type.load());\n        SetNpadStyleIndex(supported_style_tag.joycon_right ? NpadStyleIndex::JoyconRight : NpadStyleIndex::JoyconLeft);\n        Connect();\n        return;\n    }\n${unsupported_style}"
+    controller_source "${controller_source}")
 write_derived("${PORT_BUILD_DIR}/emulated_controller.cpp" "#include <string>\n${controller_source}")
 get_target_property(controller_sources hid_core SOURCES)
 list(FILTER controller_sources EXCLUDE REGEX "(^|/)emulated_controller\\.cpp$")
