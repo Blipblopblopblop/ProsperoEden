@@ -37,6 +37,7 @@ enum GameRow : int
     row_resolution,
     row_filter,
     row_refresh,
+    row_joycon, // which single Joy-Con a game that takes only those gets
     row_mods,
     row_save, // in builds that move saves
 };
@@ -615,6 +616,8 @@ void Launcher::press_game(Key key)
             next.filter = cycle(next.filter, static_cast<int>(services_.filter_labels().size()));
         if (option_ == row_refresh)
             next.refresh = cycle(next.refresh, 2);
+        if (option_ == row_joycon)
+            next.joycon = next.joycon == 1 ? -1 : 1;
         saved = services_.set_game_settings(game.title_id, next);
         if (saved)
             game_settings_ = next;
@@ -663,6 +666,7 @@ void Launcher::draw_game(Canvas &c, float open)
             fill(tr("Default ({0})"), {pick(filters, prefs_.filter)}),
         game_settings_.refresh >= 0 ? hertz(game_settings_.refresh) :
             fill(tr("Default ({0})"), {hertz(prefs_.refresh)}),
+        game_settings_.joycon == 1 ? tr("Left") : tr("Right"),
         // With the game's Mods switch off (the Library's), none of them is on.
         mods_.empty() ? std::string{tr("No mods")} :
         game != nullptr && !game->mods_enabled ? std::string{tr("Off")} :
@@ -675,7 +679,7 @@ void Launcher::draw_game(Canvas &c, float open)
     };
     static constexpr const char *kLabels[] = {TR("Console mode"), TR("Renderer"), TR("Resolution"),
                                               TR("Upscaling filter"), TR("Refresh rate"),
-                                              TR("Mods"), TR("Save data")};
+                                              TR("Single Joy-Con"), TR("Mods"), TR("Save data")};
     // Five rows show; the list scrolls to the others.
     list.push_clip({kDialogWindow.x - 24.0f, kDialogWindow.y - 6.0f, kDialogWindow.w + 48.0f,
                     kDialogWindow.h + 12.0f});

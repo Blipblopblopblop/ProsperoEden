@@ -1615,9 +1615,9 @@ string(FIND "${controller_source}" "${unsupported_style}" unsupported_style_at)
 if(unsupported_style_at LESS 0)
     message(FATAL_ERROR "Pinned controller style fallback changed")
 endif()
-string(REPLACE "${unsupported_style}" "    // ProsperoEden: fallback Pro controllers to a single Joy-Con\n    if (npad_type == NpadStyleIndex::Fullkey && (supported_style_tag.joycon_right || supported_style_tag.joycon_left)) {\n        LOG_WARNING(Service_HID, \"Reconnecting controller type {} as a single Joy-Con\", npad_type.load());\n        SetNpadStyleIndex(supported_style_tag.joycon_right ? NpadStyleIndex::JoyconRight : NpadStyleIndex::JoyconLeft);\n        Connect();\n        return;\n    }\n${unsupported_style}"
+string(REPLACE "${unsupported_style}" "    // ProsperoEden: fallback Pro controllers to a single Joy-Con, the side the player chose first\n    if (npad_type == NpadStyleIndex::Fullkey && (supported_style_tag.joycon_right || supported_style_tag.joycon_left)) {\n        const bool left = supported_style_tag.joycon_left && (Eden::prefer_left_joycon.load() || !supported_style_tag.joycon_right);\n        LOG_WARNING(Service_HID, \"Reconnecting controller type {} as a single {} Joy-Con\", npad_type.load(), left ? \"left\" : \"right\");\n        SetNpadStyleIndex(left ? NpadStyleIndex::JoyconLeft : NpadStyleIndex::JoyconRight);\n        Connect();\n        return;\n    }\n${unsupported_style}"
     controller_source "${controller_source}")
-write_derived("${PORT_BUILD_DIR}/emulated_controller.cpp" "#include <string>\n${controller_source}")
+write_derived("${PORT_BUILD_DIR}/emulated_controller.cpp" "#include <atomic>\n#include <string>\nnamespace Eden { std::atomic<bool> prefer_left_joycon{false}; }\n${controller_source}")
 get_target_property(controller_sources hid_core SOURCES)
 list(FILTER controller_sources EXCLUDE REGEX "(^|/)emulated_controller\\.cpp$")
 list(APPEND controller_sources "${PORT_BUILD_DIR}/emulated_controller.cpp")

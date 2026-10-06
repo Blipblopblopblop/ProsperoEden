@@ -306,8 +306,11 @@ struct GameSettings {
     int resolution = -1;        // index into kResolutionKeys
     int upscaling_filter = -1;  // index into kUpscalingFilterKeys
     int refresh = -1;           // index into kRefreshKeys
+    int joycon = -1;            // index into kJoyconKeys; -1 is the right one
 };
 inline constexpr const char* kRendererKeys[] = {"opengl", "vulkan"};
+// The side of a single Joy-Con, for games that take only those (some take only one side).
+inline constexpr const char* kJoyconKeys[] = {"right", "left"};
 
 inline GameSettings LoadGameSettings(uint64_t title_id, const std::string& file = SettingsFile()) {
     GameSettings result;
@@ -321,6 +324,7 @@ inline GameSettings LoadGameSettings(uint64_t title_id, const std::string& file 
     result.upscaling_filter = KeyIndex(key("upscaling_filter"), kUpscalingFilterKeys,
                                        int(std::size(kUpscalingFilterKeys)), -1);
     result.refresh = KeyIndex(key("refresh_rate"), kRefreshKeys, int(std::size(kRefreshKeys)), -1);
+    result.joycon = KeyIndex(key("joycon"), kJoyconKeys, int(std::size(kJoyconKeys)), -1);
     return result;
 }
 
@@ -328,7 +332,8 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
     if (!title_id || value.renderer >= int(std::size(kRendererKeys)) ||
         value.resolution >= int(std::size(kResolutionKeys)) ||
         value.upscaling_filter >= int(std::size(kUpscalingFilterKeys)) ||
-        value.refresh >= int(std::size(kRefreshKeys))) return false;
+        value.refresh >= int(std::size(kRefreshKeys)) ||
+        value.joycon >= int(std::size(kJoyconKeys))) return false;
     Settings::Json document = Settings::Load(file);
     document["version"] = 1;
     auto& game = document["games"][Settings::TitleKey(title_id)];
@@ -341,6 +346,7 @@ inline bool SaveGameSettings(uint64_t title_id, const GameSettings& value, const
     store("resolution", value.resolution, kResolutionKeys);
     store("upscaling_filter", value.upscaling_filter, kUpscalingFilterKeys);
     store("refresh_rate", value.refresh, kRefreshKeys);
+    store("joycon", value.joycon, kJoyconKeys);
     return Settings::Write(document, file);
 }
 

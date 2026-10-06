@@ -12,13 +12,15 @@
 #include "core/frontend/applets/controller.h"
 #include "devices.h"
 #include "diagnostics.h"
+#include "joycon_side.h"
 #include "hid_core/frontend/emulated_controller.h"
 #include "hid_core/hid_core.h"
 
 namespace Eden {
 // The controller a player gets for what the game allows: a Pro Controller, else a Joy-Con pair,
-// else single Joy-Cons (a left one for players 1 and 3 and a right one for 2 and 4 when the game
-// takes both), else the handheld for player 1 of an undocked console. Nothing only when the game
+// else single Joy-Cons (when the game takes both sides, players 1 and 3 get the side chosen in
+// Library > Game settings and players 2 and 4 the other), else the handheld for player 1 of an
+// undocked console. Nothing only when the game
 // allows none of these; it then shows its screen again.
 inline std::optional<Core::HID::NpadStyleIndex> ControllerStyle(
     const Core::Frontend::ControllerParameters& parameters, std::size_t index, bool docked) {
@@ -26,7 +28,8 @@ inline std::optional<Core::HID::NpadStyleIndex> ControllerStyle(
     if (parameters.allow_pro_controller) return NpadStyleIndex::Fullkey;
     if (parameters.allow_dual_joycons) return NpadStyleIndex::JoyconDual;
     if (parameters.allow_left_joycon && parameters.allow_right_joycon)
-        return index % 2 == 0 ? NpadStyleIndex::JoyconLeft : NpadStyleIndex::JoyconRight;
+        return (index % 2 == 0) == prefer_left_joycon.load() ? NpadStyleIndex::JoyconLeft
+                                                             : NpadStyleIndex::JoyconRight;
     if (parameters.allow_left_joycon) return NpadStyleIndex::JoyconLeft;
     if (parameters.allow_right_joycon) return NpadStyleIndex::JoyconRight;
     if (index == 0 && parameters.allow_handheld && !docked) return NpadStyleIndex::Handheld;

@@ -35,6 +35,7 @@
 #include "log_pipe.h"
 #include "mods.h"
 #include "controller_applet.h"
+#include "joycon_side.h"
 #include "error_applet.h"
 #include "preferences.h"
 #include "metadata_bridge.h"
@@ -734,6 +735,9 @@ int main(int argc, char** argv) {
         Settings::values.use_docked_mode.SetValue(docked ? Settings::ConsoleMode::Docked
                                                        : Settings::ConsoleMode::Handheld);
         Eden::Report("launch", docked ? "Console mode: Docked" : "Console mode: Handheld");
+        // A game that takes only single Joy-Cons gets this side first (Library > Game settings).
+        Eden::prefer_left_joycon.store(Eden::LoadGameSettings(eden_game_title_id(guest)).joycon == 1);
+        Eden::Report("launch", Eden::prefer_left_joycon.load() ? "Single Joy-Con: Left" : "Single Joy-Con: Right");
 #endif
 #endif
 #if defined(PS5_NATIVE) && defined(EDEN_PS5_OPENGL)
@@ -1235,9 +1239,11 @@ int main(int argc, char** argv) {
                                 if (present) {
                                     // A Pro Controller, else a single Joy-Con for games that take
                                     // only those (Just Dance); Connect refuses a style the game does not.
-                                    for (const auto style : {Core::HID::NpadStyleIndex::Fullkey,
-                                                             Core::HID::NpadStyleIndex::JoyconRight,
-                                                             Core::HID::NpadStyleIndex::JoyconLeft}) {
+                                    using Core::HID::NpadStyleIndex;
+                                    const bool left = Eden::prefer_left_joycon.load();
+                                    for (const auto style : {NpadStyleIndex::Fullkey,
+                                                             left ? NpadStyleIndex::JoyconLeft : NpadStyleIndex::JoyconRight,
+                                                             left ? NpadStyleIndex::JoyconRight : NpadStyleIndex::JoyconLeft}) {
                                         controller->SetNpadStyleIndex(style);
                                         controller->Connect();
                                         if (controller->IsConnected()) break;

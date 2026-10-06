@@ -115,6 +115,7 @@ struct GameSettings
     int resolution = -1;
     int filter = -1;
     int refresh = -1;
+    int joycon = -1; // single Joy-Con side: -1 right, 1 left
 };
 
 // One cheat of a mod that lists several: each is chosen on its own.
