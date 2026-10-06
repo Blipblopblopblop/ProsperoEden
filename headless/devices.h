@@ -65,6 +65,8 @@ public:
     bool Poll();
     bool TakeReturnToMenu() { return return_to_menu.exchange(false); }
     bool TakeHudToggle() { return hud_toggle.exchange(false); }
+    // Players who pressed touchpad + Triangle (bit per player): their single Joy-Con changes side.
+    unsigned TakeJoyconSwaps() { return joycon_swaps.exchange(0); }
     // Players with a controller (bit per player), and those whose controller came or went.
     unsigned ConnectedPlayers() const { return connected_players.load(); }
     unsigned TakeConnectionChanges() { return connection_changes.exchange(0); }
@@ -100,6 +102,7 @@ private:
     bool owns_user_service = false;
     std::atomic<bool> return_to_menu = false;
     std::atomic<bool> hud_toggle = false;
+    std::atomic<unsigned> joycon_swaps = 0;
     std::atomic<unsigned> connected_players = 0;
     std::atomic<unsigned> connection_changes = 0;
     unsigned polls_since_scan = 0;

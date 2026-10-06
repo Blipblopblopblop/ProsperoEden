@@ -278,6 +278,9 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
         // The shortcuts work from every controller.
         constexpr ButtonMask menu_chord = kButtonTouchPad | kButtonL1;
         constexpr ButtonMask hud_chord = kButtonTouchPad | kButtonR1;
+        // This controller's single Joy-Con changes side (main.cpp), for games where one player
+        // needs a left one and another a right one.
+        constexpr ButtonMask swap_chord = kButtonTouchPad | kButtonTriangle;
         const auto pressed = sample.buttons;
         if ((pressed & menu_chord) == menu_chord &&
             (last_buttons & menu_chord) != menu_chord)
@@ -285,8 +288,13 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
         if ((pressed & hud_chord) == hud_chord &&
             (last_buttons & hud_chord) != hud_chord)
             hud_toggle = true;
+        if ((pressed & swap_chord) == swap_chord &&
+            (last_buttons & swap_chord) != swap_chord)
+            joycon_swaps.fetch_or(1u << player);
         if ((pressed & menu_chord) == menu_chord || (pressed & hud_chord) == hud_chord)
             sample.buttons &= ~(kButtonTouchPad | kButtonL1 | kButtonR1);
+        if ((pressed & swap_chord) == swap_chord)
+            sample.buttons &= ~swap_chord;
         // The touchpad on its own: see kSelectTapPolls.
         const bool touch = (pressed & kButtonTouchPad) != 0;
         const bool touched = (last_buttons & kButtonTouchPad) != 0;
@@ -294,7 +302,7 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
             slot.touch_chord = false;
             slot.touch_polls = 0;
         }
-        if (touch && (pressed & (kButtonL1 | kButtonR1)) != 0) {
+        if (touch && (pressed & (kButtonL1 | kButtonR1 | kButtonTriangle)) != 0) {
             slot.touch_chord = true;
             slot.select_held = false;
         }

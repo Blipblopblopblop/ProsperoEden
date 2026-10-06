@@ -1254,6 +1254,32 @@ int main(int argc, char** argv) {
                                 LOG_INFO(Input, "EDEN_PLAYER player={} connected={}", index + 1, present);
                             }
                         }
+                        // Touchpad + Triangle: that player's single Joy-Con changes side, for games where
+                        // one player needs a left one and another a right one. A side the game does
+                        // not take leaves the Joy-Con as it was.
+                        if (const unsigned swaps = pad->TakeJoyconSwaps()) {
+                            using Core::HID::NpadStyleIndex;
+                            for (std::size_t index = 0; index < Eden::Pad::kMaxPlayers; ++index) {
+                                if (!(swaps & (1u << index))) continue;
+                                auto* controller = system.HIDCore().GetEmulatedControllerByIndex(index);
+                                const auto style = controller->GetNpadStyleIndex();
+                                if (style != NpadStyleIndex::JoyconLeft && style != NpadStyleIndex::JoyconRight)
+                                    continue;
+                                const auto other = style == NpadStyleIndex::JoyconLeft ? NpadStyleIndex::JoyconRight
+                                                                                       : NpadStyleIndex::JoyconLeft;
+                                controller->Disconnect();
+                                controller->SetNpadStyleIndex(other);
+                                controller->Connect();
+                                const bool swapped = controller->IsConnected();
+                                if (!swapped) {
+                                    controller->SetNpadStyleIndex(style);
+                                    controller->Connect();
+                                }
+                                LOG_INFO(Input, "EDEN_JOYCON_SWAP player={} side={} swapped={}", index + 1,
+                                         (swapped ? other : style) == NpadStyleIndex::JoyconLeft ? "left" : "right",
+                                         swapped);
+                            }
+                        }
                         // A player given a single Joy-Con (Just Dance) gets the DualSense's motion in a
                         // Joy-Con's grip (motion_frame.h); any other style keeps it as it is.
                         for (std::size_t index = 0; index < Eden::Pad::kMaxPlayers; ++index) {

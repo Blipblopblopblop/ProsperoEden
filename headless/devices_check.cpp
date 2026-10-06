@@ -142,6 +142,12 @@ void CheckPad() {
         CHECK(pad.TakeHudToggle()); CHECK(!pad.TakeHudToggle());
         CHECK(none_pressed());
         sample.buttons = 0; consume();
+        // Touchpad + Triangle: this player's single Joy-Con changes side, once per press.
+        sample.buttons = kButtonTouchPad | kButtonTriangle; consume();
+        CHECK(pad.TakeJoyconSwaps() == 1u); CHECK(pad.TakeJoyconSwaps() == 0u);
+        CHECK(none_pressed());
+        consume(); CHECK(pad.TakeJoyconSwaps() == 0u);
+        sample.buttons = 0; consume();
         // A shortcut is never a press of Minus, however long its keys take to come up.
         for (int i = 0; i < 80; ++i) { consume(); CHECK(none_pressed()); }
 
