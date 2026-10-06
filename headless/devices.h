@@ -11,6 +11,7 @@
 #include "audio_core/sink/sink.h"
 #include "input_common/drivers/virtual_gamepad.h"
 #include "input_common/input_engine.h"
+#include "motion_frame.h"
 #include "ps5_pad.hpp"
 
 namespace Eden {
@@ -67,6 +68,11 @@ public:
     // Players with a controller (bit per player), and those whose controller came or went.
     unsigned ConnectedPlayers() const { return connected_players.load(); }
     unsigned TakeConnectionChanges() { return connection_changes.exchange(0); }
+    // The frame a player's motion goes to the game in (motion_frame.h): set from the controller
+    // style the game was given, read where samples are consumed.
+    void SetMotionFrame(std::size_t player, MotionFrame frame) {
+        if (player < kMaxPlayers) motion_frames[player].store(frame, std::memory_order_relaxed);
+    }
     void Close();
     void Consume(std::span<const ps5::pad::Data> samples) { Consume(0, samples); }
     void Consume(std::size_t player, std::span<const ps5::pad::Data> samples);
@@ -90,6 +96,7 @@ private:
     float deadzone;
     float trigger_threshold;
     std::array<Slot, kMaxPlayers> slots{};
+    std::array<std::atomic<MotionFrame>, kMaxPlayers> motion_frames{};
     bool owns_user_service = false;
     std::atomic<bool> return_to_menu = false;
     std::atomic<bool> hud_toggle = false;

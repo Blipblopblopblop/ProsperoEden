@@ -332,7 +332,10 @@ void Pad::Consume(std::size_t player, std::span<const ps5::pad::Data> samples) {
                 constexpr float turn = 2.0f * std::numbers::pi_v<float>;
                 const auto& a = raw.acceleration;
                 const auto& w = raw.angular_velocity;
-                engine->SetMotionState(player, delta, w.x / turn, -w.z / turn, w.y / turn, -a.x, a.z, -a.y);
+                const auto frame = motion_frames[player].load(std::memory_order_relaxed);
+                const auto gyro = ToMotionFrame(frame, {w.x / turn, -w.z / turn, w.y / turn});
+                const auto accel = ToMotionFrame(frame, {-a.x, a.z, -a.y});
+                engine->SetMotionState(player, delta, gyro.x, gyro.y, gyro.z, accel.x, accel.y, accel.z);
             }
         }
     }

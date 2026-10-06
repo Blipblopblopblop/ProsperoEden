@@ -70,6 +70,15 @@ inline uint32_t HudGlyph(char c) {
     case 'V': return 0x5b6a;
     case 'K': return 0x5bad;
     case 'W': return 0x5fed;
+    case 'J': return 0x126f;
+    case 'C': return 0x7927;
+    case 'R': return 0x6bad;
+    case 'U': return 0x5b6f;
+    case 'H': return 0x5bed;
+    case 'X': return 0x5aad;
+    case 'Y': return 0x5a92;
+    case 'Z': return 0x72a7;
+    case '+': return 0x05d0;
     case '.': return 0x0002;
     case '-': return 0x01c0;
     default: return 0;
@@ -120,11 +129,33 @@ inline std::array<char, 25> FormatHudText(const HudClock& clock, double speed,
                        backend, clock.fps, speed, clock.worst_ms);
     return text;
 }
+inline HudSnapshot MakeTextSnapshot(std::string_view value) {
+    return {HudText(value), static_cast<uint32_t>(std::min<size_t>(value.size(), 24) * 16 + 24)};
+}
 inline HudSnapshot MakeHudSnapshot(const HudClock& clock, double speed) {
     const auto text = FormatHudText(clock, speed, "VLK");
-    const std::string_view value{text.data()};
-    return {HudText(value), static_cast<uint32_t>(value.size() * 16 + 24)};
+    return MakeTextSnapshot(text.data());
 }
+// The motion overlay (Select + R1 a second time): the controller style player 1's game was given
+// (PRO, JCR, JCL, DUO, HH) and the acceleration the game receives, in G. Held still that is
+// gravity alone, which shows which way the game thinks the controller points: a Joy-Con standing
+// upright reads Y-1.00, one lying face up Z-1.00.
+inline std::array<char, 25> FormatMotionText(const char* style, float x, float y, float z) {
+    const auto bounded = [](float v) { return v == v ? std::clamp(v, -9.99f, 9.99f) : 0.0f; };
+    std::array<char, 25> text{};
+    std::snprintf(text.data(), text.size(), "%s X%+.2f Y%+.2f Z%+.2f", style, bounded(x), bounded(y),
+                  bounded(z));
+    return text;
+}
+// How often the motion overlay's numbers change: every frame they flicker past reading.
+struct MotionHudPace {
+    double last{-1};
+    bool Due(double now) {
+        if (last >= 0 && now - last < 0.1) return false;
+        last = now;
+        return true;
+    }
+};
 // Read on the renderer thread; the scheduler captures the returned value per frame.
 HudSnapshot GetVulkanHud();
 } // namespace Eden

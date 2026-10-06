@@ -25,6 +25,7 @@ with tempfile.TemporaryDirectory() as directory:
     source = Path(directory) / 'hud.cpp'
     binary = Path(directory) / 'hud'
     source.write_text(r'''#include "hud.h"
+#include "motion_frame.h"
 #include <cassert>
 #include <cmath>
 int main() {
@@ -76,6 +77,25 @@ int main() {
     int pictures = 0;
     for (int ms = 0; ms < 1000; ++ms) pictures += pace.Due(11.0 + ms / 1000.0, true);
     assert(pictures >= 59 && pictures <= 61);
+    // The motion overlay: style and acceleration, every character drawable, within 24 glyphs.
+    const auto motion = Eden::FormatMotionText("JCR", 0.0f, -1.0f, 0.004f);
+    assert(std::string_view(motion.data()) == "JCR X+0.00 Y-1.00 Z+0.00");
+    for (const char c : std::string_view(motion.data())) assert(c == ' ' || Eden::HudGlyph(c) != 0);
+    for (const char c : std::string_view("PRO JCL DUO HH ---")) assert(c == ' ' || Eden::HudGlyph(c) != 0);
+    assert(std::string_view(Eden::FormatMotionText("PRO", 50.0f, -50.0f, 0.0f / 0.0f).data()) ==
+           "PRO X+9.99 Y-9.99 Z+0.00");
+    assert(Eden::MakeTextSnapshot(motion.data()).width == 24 * 16 + 24);
+    Eden::MotionHudPace motion_pace;
+    assert(motion_pace.Due(5.0) && !motion_pace.Due(5.05) && motion_pace.Due(5.11));
+    // A DualSense in the Joy-Con grip: gravity along its right edge is a Joy-Con standing upright,
+    // a turn about its face stays one, and the Pro Controller's frame is left as it is.
+    using Eden::MotionFrame;
+    const auto upright = Eden::ToMotionFrame(MotionFrame::JoyconGrip, {1.0f, 0.0f, 0.0f});
+    assert(upright.x == 0.0f && upright.y == -1.0f && upright.z == 0.0f);
+    const auto face = Eden::ToMotionFrame(MotionFrame::JoyconGrip, {0.0f, 0.0f, 0.5f});
+    assert(face.x == 0.0f && face.y == 0.0f && face.z == 0.5f);
+    const auto native = Eden::ToMotionFrame(MotionFrame::Native, {1.0f, 2.0f, 3.0f});
+    assert(native.x == 1.0f && native.y == 2.0f && native.z == 3.0f);
 }
 ''')
     subprocess.run(['c++', '-std=c++20', '-I'+str(root/'headless'), str(source), '-o', str(binary)], check=True)

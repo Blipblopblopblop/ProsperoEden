@@ -23,6 +23,8 @@
 #include "graphics.h"
 #include "common/scope_exit.h"
 #include "core/core.h"
+#include "hid_core/frontend/emulated_controller.h"
+#include "hid_core/hid_core.h"
 #include "core/frontend/graphics_context.h"
 #include "core/perf_stats.h"
 #include "video_core/renderer_base.h"
@@ -46,7 +48,26 @@ double LoadingCalm() {
     static const double calm = LoadPreferences().reduce_motion ? 1000.0 : 0.0;
     return calm;
 }
-std::atomic<bool> hud_enabled{true};
+// The overlay Select + R1 steps through: off, performance, motion (hud.h).
+enum HudMode : int { kHudOff, kHudPerformance, kHudMotion };
+std::atomic<int> hud_mode{kHudPerformance};
+// Player 1's controller as the game sees it, for the motion overlay.
+std::array<char, 25> MotionHudText(Core::System& system) {
+    using Core::HID::NpadStyleIndex;
+    auto* controller = system.HIDCore().GetEmulatedControllerByIndex(0);
+    const auto style = controller->GetNpadStyleIndex();
+    const char* label = style == NpadStyleIndex::Fullkey       ? "PRO"
+                        : style == NpadStyleIndex::JoyconRight ? "JCR"
+                        : style == NpadStyleIndex::JoyconLeft  ? "JCL"
+                        : style == NpadStyleIndex::JoyconDual  ? "DUO"
+                        : style == NpadStyleIndex::Handheld    ? "HH"
+                                                               : "---";
+    // A right Joy-Con's sensor is the controller's second (hid_core six_axis.cpp).
+    const auto motion = controller->GetMotions()[style == NpadStyleIndex::JoyconRight ? 1 : 0];
+    return FormatMotionText(label, motion.accel[0], motion.accel[1], motion.accel[2]);
+}
+MotionHudPace motion_hud_pace;
+std::array<char, 25> motion_hud_text{};
 HudClock vulkan_hud_clock;
 HudSnapshot vulkan_hud;
 double vulkan_hud_stats_time{}, vulkan_hud_speed{};
@@ -309,7 +330,13 @@ public:
             last_stats = now;
         }
         const auto text = FormatHudText(clock, speed_percent, "OGL");
-        if (hud_enabled.load(std::memory_order_relaxed)) DrawHud(text.data(), false);
+        const int mode = hud_mode.load(std::memory_order_relaxed);
+        if (mode == kHudMotion && system) {
+            if (motion_hud_pace.Due(now)) motion_hud_text = MotionHudText(*system);
+            DrawHud(motion_hud_text.data(), false);
+        } else if (mode != kHudOff) {
+            DrawHud(text.data(), false);
+        }
         Check(eglSwapBuffers(display, surface), "eglSwapBuffers");
     }
     void PresentLoading() {
@@ -477,14 +504,16 @@ private:
 };
 }
 void ToggleHud() {
-    const bool enabled = !hud_enabled.load(std::memory_order_relaxed);
-    hud_enabled.store(enabled, std::memory_order_relaxed);
+    const int mode = (hud_mode.load(std::memory_order_relaxed) + 1) % 3;
+    hud_mode.store(mode, std::memory_order_relaxed);
+    // The saved preference is whether the overlay shows; it comes back as the performance one.
     auto preferences = LoadPreferences();
-    preferences.hud = enabled;
+    if (preferences.hud == (mode != kHudOff)) return;
+    preferences.hud = mode != kHudOff;
     if (!SavePreferences(preferences)) Report("settings", "Could not save HUD preference");
 }
 HudSnapshot GetVulkanHud() {
-    return vulkan_loading || hud_enabled.load(std::memory_order_relaxed) ? vulkan_hud : HudSnapshot{};
+    return vulkan_loading || hud_mode.load(std::memory_order_relaxed) != kHudOff ? vulkan_hud : HudSnapshot{};
 }
 // idle: the GPU thread has no game commands waiting (hud.h, LoadingPace).
 bool LoadingTick(VideoCore::RendererBase& renderer, bool idle) {
@@ -510,7 +539,7 @@ GraphicsWindow::GraphicsWindow(bool use_vulkan) : vulkan(use_vulkan) {
     vulkan_loading_start = -1;
     vulkan_loading_frames = 0;
     vulkan_loading_pace = {};
-    hud_enabled.store(LoadPreferences().hud, std::memory_order_relaxed);
+    hud_mode.store(LoadPreferences().hud ? kHudPerformance : kHudOff, std::memory_order_relaxed);
 #ifdef EDEN_PS5_VULKAN
     if (vulkan) {
         vulkan_hud_clock = {};
@@ -617,7 +646,14 @@ void GraphicsWindow::OnFrameDisplayed() {
             vulkan_hud_speed = system->GetAndResetPerfStats().emulation_speed * 100.0;
             vulkan_hud_stats_time = now;
         }
-        vulkan_hud = MakeHudSnapshot(vulkan_hud_clock, vulkan_hud_speed);
+        if (hud_mode.load(std::memory_order_relaxed) == kHudMotion && system) {
+            if (motion_hud_pace.Due(now)) {
+                motion_hud_text = MotionHudText(*system);
+                vulkan_hud = MakeTextSnapshot(motion_hud_text.data());
+            }
+        } else {
+            vulkan_hud = MakeHudSnapshot(vulkan_hud_clock, vulkan_hud_speed);
+        }
 #endif
         ++frame_total;
         if (frame_sample_start < 0) {

@@ -52,7 +52,8 @@ The complete ProsperoEden source is in this repository: the PS5 frontend and lau
 - **Mods** - patches, replacement game files and cheats for a game, from a `mods` folder next to `roms`, each switched on or off in the game's settings (Triangle in the Library, then **Mods**).
 - **Performance switches** - seven switches that trade accuracy for speed (compiling a game's code ahead, asynchronous shaders, faster GPU, CPU and DMA emulation, and more) in **Settings > Performance**; see [Performance settings](#performance-settings).
 - **Shader cache** - shaders compiled in earlier sessions are loaded when a game starts, so an effect stutters only the first time it appears.
-- **In-game shortcuts** - a performance overlay (Select + R1), and Select + L1 to end the game and return to the library.
+- **In-game shortcuts** - a performance overlay and a motion overlay (Select + R1 steps through them), and Select + L1 to end the game and return to the library.
+- **Single Joy-Con motion games** - a game that takes only single Joy-Cons (Just Dance) gets one. Hold the DualSense by its right grip, buttons toward the TV, standing up out of your fist: the game gets the motion of a Joy-Con held upright in the right hand. The motion overlay shows what the game receives (`JCR ... Y-1.00` when held upright and still).
 - **Settings in one place** - a single JSON file under `/data/prosperoeden`, with game volume, mute, and detailed logging options. Logs keep the previous session.
 - **Crash reports** - if ProsperoEden stops because of an error, it saves a report with that session's logs, starts again and shows where the report is.
 - **Controllers, audio, and saves** - up to four DualSense controllers (one per signed-in PS5 user) with rumble and motion controls, game audio, and save data work out of the box.
@@ -234,7 +235,7 @@ Earlier versions read everything from `/data/homebrew/PPSA99008/assets/`. That f
 
 | Shortcut | Action |
 |---|---|
-| Select + R1 | Toggle the performance HUD |
+| Select + R1 | Step the overlay: performance, motion (controller style and acceleration in G), off |
 | Select + L1 | End the running game and return to the library |
 
 ## Roadmap

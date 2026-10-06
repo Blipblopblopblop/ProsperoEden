@@ -1248,6 +1248,17 @@ int main(int argc, char** argv) {
                                 LOG_INFO(Input, "EDEN_PLAYER player={} connected={}", index + 1, present);
                             }
                         }
+                        // A player given a single Joy-Con (Just Dance) gets the DualSense's motion in a
+                        // Joy-Con's grip (motion_frame.h); any other style keeps it as it is.
+                        for (std::size_t index = 0; index < Eden::Pad::kMaxPlayers; ++index) {
+                            using Core::HID::NpadStyleIndex;
+                            const auto style =
+                                system.HIDCore().GetEmulatedControllerByIndex(index)->GetNpadStyleIndex();
+                            pad->SetMotionFrame(index, style == NpadStyleIndex::JoyconLeft ||
+                                                               style == NpadStyleIndex::JoyconRight
+                                                           ? Eden::MotionFrame::JoyconGrip
+                                                           : Eden::MotionFrame::Native);
+                        }
 #ifdef EDEN_PS5_OPENGL
                         if (pad->TakeHudToggle()) Eden::ToggleHud();
 #else
